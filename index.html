@@ -150,6 +150,8 @@ section{position:relative}
 #ch2 .intro b{color:var(--cream);font-weight:400}
 .records{border-top:1px solid var(--cream-10)}
 .record{border-bottom:1px solid var(--cream-10);position:relative}
+.record::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .9s var(--ease-io);pointer-events:none}
+.record:hover::after{transform:scaleX(1)}
 .rec-head{appearance:none;background:none;border:0;color:inherit;font:inherit;text-align:left;width:100%;display:grid;grid-template-columns:80px 1fr auto;align-items:baseline;gap:24px;padding:clamp(28px,4.4vh,48px) var(--pad);position:relative;transition:background-color .6s}
 .rec-head:hover{background:var(--cream-06)}
 .rec-num{font-size:11px;font-weight:400;letter-spacing:.3em;color:var(--cream-55);transition:color .5s}
@@ -211,8 +213,8 @@ section{position:relative}
 #ch5{padding:26vh 0 0}
 #ch5 .inv{text-align:center;padding:0 var(--pad)}
 #ch5 .ready{font-size:11px;font-weight:400;letter-spacing:.42em;color:var(--cream-55);text-transform:lowercase;margin-bottom:5vh}
-#ch5 h2{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(42px,7.6vw,124px);line-height:1.06;letter-spacing:-.01em}
-#ch5 h2 .word{display:inline-block;overflow:hidden;vertical-align:bottom;margin:0 .12em}
+#ch5 h2{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(42px,7.6vw,124px);line-height:.98;letter-spacing:-.01em}
+#ch5 h2 .word{display:inline-block;overflow:hidden;vertical-align:bottom;margin:0 .1em;padding-bottom:.14em;margin-bottom:-.14em}
 #ch5 h2 .word>span{display:inline-block;transform:translateY(112%)}
 #ch5 h2 .accent{position:relative}
 #ch5 h2 .accent::after{content:"";position:absolute;left:2%;right:2%;bottom:.06em;height:2px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform 1s var(--ease-io) .1s}
@@ -428,7 +430,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
             <a class="rec-link" href="https://zhp.vercel.app/" target="_blank" rel="noopener" data-hover>visit the live site</a>
           </div>
           <div class="rec-gallery">
-            <figure class="gal wide"><span class="frame"><video src="assets/img/zhp-anim.webm" autoplay muted loop playsinline preload="metadata"></video></span><figcaption>the site, in motion</figcaption></figure>
+            <figure class="gal wide"><span class="frame"><video src="assets/img/zhp-anim.webm" muted loop playsinline preload="metadata"></video></span><figcaption>the site, in motion</figcaption></figure>
             <figure class="gal"><span class="frame"><img src="assets/img/zhp-02.jpg" alt="2fit2fail website — trainer introduction section" loading="lazy"></span><figcaption>the story section</figcaption></figure>
             <figure class="gal"><span class="frame"><img src="assets/img/zhp-03.jpg" alt="2fit2fail website — training packages section" loading="lazy"></span><figcaption>the packages section</figcaption></figure>
           </div>
@@ -810,6 +812,8 @@ if (!isTouch && CINEMA){
     const head = rec.querySelector('.rec-head');
     const vidSrc = rec.dataset.plateVideo;
     head.addEventListener('mouseenter', () => {
+      $('#cur-label').textContent = head.getAttribute('aria-expanded') === 'true' ? 'close' : 'open';
+      if (head.getAttribute('aria-expanded') === 'true') return;
       if (vidSrc && plateVid){
         // the project's own animation becomes the cover of its hover preview
         if (plateVid.getAttribute('src') !== vidSrc) plateVid.setAttribute('src', vidSrc);
@@ -832,6 +836,26 @@ if (!isTouch && CINEMA){
   // a still cursor doesn't get a mouseleave when the page moves beneath it —
   // any scroll clears the plate so it can never be stranded over the site
   addEventListener('scroll', hidePlate, { passive:true });
+  // warm the hover video just before the archive arrives
+  if (plateVid && 'IntersectionObserver' in window){
+    const rc = $('#records');
+    if (rc){
+      const warm = new IntersectionObserver(es => {
+        es.forEach(en => {
+          if (en.isIntersecting){
+            const src = document.querySelector('[data-plate-video]');
+            if (src && !plateVid.getAttribute('src')){
+              plateVid.preload = 'auto';
+              plateVid.setAttribute('src', src.dataset.plateVideo);
+              plateVid.load();
+            }
+            warm.disconnect();
+          }
+        });
+      }, { rootMargin:'600px' });
+      warm.observe(rc);
+    }
+  }
   if (lenis) lenis.on('scroll', hidePlate);
 }
 
@@ -878,6 +902,14 @@ if (!isTouch && hasLibs){
       sy((e.clientY - (r.top + r.height/2)) * .22);
     });
     el.addEventListener('mouseleave', () => { sx(0); sy(0); });
+  });
+}
+
+/* the tab remembers you were here */
+{
+  const homeTitle = document.title;
+  document.addEventListener('visibilitychange', () => {
+    document.title = document.hidden ? 'the archive remembers\u2026' : homeTitle;
   });
 }
 
@@ -939,15 +971,27 @@ function buildFilm(){
     onUpdate: st => { railFill.style.transform = `scaleY(${st.progress})`; } });
 
   /* 00 · the dark — pinned; the words are exhaled back into dust */
-  gsap.timeline({
-    scrollTrigger: { trigger:'#ch0', start:'top top', end:'+=115%', pin:true, scrub:.8 }
-  })
-  .to({}, { duration:.56 })
-  .to(h0chars, { y: i => -60 - (i%7)*22, opacity:0, filter:'blur(10px)',
-      stagger:{ each:.012, from:'random' }, ease:'power2.in' }, .56)
-  .to('#h0-sub', { opacity:0, y:-30, duration:.36 }, .56)
-  .to('#hint', { opacity:0, duration:.22 }, .5)
-  .add(() => {}, 1);
+  let userScrolled = false;
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev =>
+    addEventListener(ev, () => userScrolled = true, { passive:true }));
+
+  const heroOut = gsap.timeline({ paused:true })
+    .to(h0chars, { y: i => -60 - (i%7)*22, opacity:0, filter:'blur(10px)',
+        stagger:{ each:.012, from:'random' }, duration:.9, ease:'power2.in' }, 0)
+    .to('#h0-sub', { opacity:0, y:-30, duration:.7 }, 0)
+    .to('#hint', { opacity:0, duration:.5 }, 0);
+  let heroGone = false;
+
+  ScrollTrigger.create({
+    trigger:'#ch0', start:'top top', end:'+=115%', pin:true,
+    onUpdate: st => {
+      if (!heroGone && userScrolled && st.progress > 0.03){
+        heroGone = true; heroOut.timeScale(1).play();
+      } else if (heroGone && st.progress <= 0.015){
+        heroGone = false; heroOut.timeScale(1.6).reverse();
+      }
+    }
+  });
 
   /* film opacity through ch0 */
   ScrollTrigger.create({ trigger:'#ch0', start:'top top', end:'bottom top', scrub:true,
