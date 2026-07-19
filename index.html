@@ -98,6 +98,13 @@ body.touch #cur-dot,body.touch #cur-ring{display:none}
 #hint .tick{width:1px;height:34px;background:var(--cream-10);position:relative;overflow:hidden}
 #hint .tick i{position:absolute;left:0;top:-100%;width:100%;height:100%;background:var(--cream-40);animation:tickfall 2.1s var(--ease-io) infinite}
 @keyframes tickfall{0%{top:-100%}55%{top:0}100%{top:100%}}
+#float-cta{position:absolute;bottom:var(--pad);right:var(--pad);display:inline-flex;align-items:center;gap:12px;opacity:0;pointer-events:none;padding:14px 20px 14px 16px;border:1px solid var(--cream-24);border-radius:99px;background:rgba(10,9,8,.55);backdrop-filter:blur(6px);font-size:10px;font-weight:400;letter-spacing:.3em;text-transform:lowercase;color:var(--cream);transition:border-color .5s,background-color .5s;will-change:transform}
+#float-cta:hover{border-color:var(--cream-40);background:rgba(10,9,8,.8)}
+#float-cta.on{pointer-events:auto}
+#float-cta .dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex:none;animation:pulse-dot 2.6s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.7);opacity:.55}}
+@media (prefers-reduced-motion:reduce){#float-cta .dot{animation:none}}
+@media (max-width:640px){#float-cta .ftxt{display:none}#float-cta{padding:14px;gap:0}}
 
 /* ————— layout / chapters ————— */
 main{position:relative;z-index:10}
@@ -167,11 +174,12 @@ section{position:relative}
 
 /* ch3 — behind the work */
 #ch3{padding:16vh 0 22vh}
-#ch3 .grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:clamp(40px,6vw,110px);padding:0 var(--pad);align-items:start}
-#ch3 .portrait{position:relative;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(ellipse 90% 75% at 50% 100%,rgba(236,229,216,.09),transparent 65%),var(--ink-2)}
+#ch3 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(40px,6vw,110px);padding:0 var(--pad);align-items:center}
+#ch3 .portrait{position:relative;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:220px}
+#ch3 .portrait .backdrop{position:absolute;left:50%;bottom:0;width:150%;height:88%;transform:translateX(-50%);background:radial-gradient(ellipse 55% 68% at 50% 100%,rgba(236,229,216,.11),transparent 72%);z-index:0;pointer-events:none}
 #ch3 .portrait::before{content:"";position:absolute;inset:0;border:1px solid var(--cream-10);z-index:4;pointer-events:none}
-#ch3 .portrait img{position:absolute;inset:6% 4% 0 4%;width:92%;height:94%;object-fit:contain;object-position:bottom center;filter:grayscale(1) contrast(1.05) brightness(.94);transform:scale(1.08);transform-origin:bottom center}
-#ch3 .portrait .shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(10,9,8,.55));z-index:2}
+#ch3 .portrait img{position:relative;z-index:1;display:block;width:auto;max-width:100%;height:auto;max-height:min(70vh,620px);filter:grayscale(1) contrast(1.05) brightness(.94)}
+#ch3 .portrait .shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(10,9,8,.4));z-index:2;pointer-events:none}
 #ch3 .portrait .cover{position:absolute;inset:0;background:var(--ink);z-index:3;transform-origin:top}
 #ch3 .who{font-size:11px;font-weight:400;letter-spacing:.34em;color:var(--cream-55);text-transform:lowercase;margin-bottom:26px}
 #ch3 .name{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(40px,5vw,80px);line-height:1.04;margin-bottom:7vh}
@@ -227,8 +235,9 @@ footer a:hover::after{transform:scaleX(1);transform-origin:left}
   .rec-body-in{grid-template-columns:1fr;padding-left:var(--pad)}
   .rec-info{position:static}
   .rec-gallery{grid-template-columns:1fr}
-  #ch3 .grid{grid-template-columns:1fr}
-  #ch3 .portrait{max-width:480px;margin:0 auto}
+  #ch3 .grid{grid-template-columns:1fr;gap:52px}
+  #ch3 .portrait{max-width:340px;margin:0 auto}
+  #ch3 .portrait img{max-height:52vh}
   #plate{display:none}
   #chapter .name{display:none}
 }
@@ -277,6 +286,9 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
     </span>
   </div>
   <div id="hint" aria-hidden="true"><em>scroll to remember</em><span class="tick"><i></i></span></div>
+  <a id="float-cta" href="mailto:info@domenmarkeljc.com" data-hover aria-label="start a project">
+    <span class="dot"></span><span class="ftxt">start a project</span>
+  </a>
 </div>
 
 <main id="top">
@@ -423,7 +435,8 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
     </div>
     <div class="grid">
       <figure class="portrait" id="portrait">
-        <img id="portrait-img" src="https://domenmarkeljc.com/wp-content/uploads/2026/06/aboutttd.png" alt="Domen Markeljc, portrait" loading="lazy" onerror="this.remove()">
+        <span class="backdrop"></span>
+        <img id="portrait-img" src="https://domenmarkeljc.com/wp-content/uploads/2026/06/aboutttd.png" alt="Domen Markeljc, portrait" onerror="this.closest('figure').style.display='none'">
         <span class="shade"></span><span class="cover" id="portrait-cover"></span>
       </figure>
       <div>
@@ -774,19 +787,27 @@ if (!isTouch && CINEMA){
     requestAnimationFrame(follow);
   };
   follow();
+  const hidePlate = () => {
+    if (!shown) return;
+    shown = false;
+    gsap.to(plate, { opacity:0, duration:.3, ease:'power2.out' });
+  };
   $$('.record').forEach((rec,i) => {
-    rec.querySelector('.rec-head').addEventListener('mouseenter', () => {
+    const head = rec.querySelector('.rec-head');
+    head.addEventListener('mouseenter', () => {
       if (plateArts[i]) plateCtx.drawImage(plateArts[i],0,0);
       if (!shown){ px = mouse.x+30; py = mouse.y - plate.offsetHeight/2; }
       shown = true;
       gsap.to(plate, { opacity:1, duration:.5, ease:'power2.out' });
       gsap.fromTo(plate, { clipPath:'inset(12% 12% 12% 12%)' }, { clipPath:'inset(0% 0% 0% 0%)', duration:.7, ease:'expo.out' });
     });
-    rec.querySelector('.rec-head').addEventListener('mouseleave', () => {
-      shown = false;
-      gsap.to(plate, { opacity:0, duration:.35, ease:'power2.out' });
-    });
+    head.addEventListener('mouseleave', hidePlate);
+    head.addEventListener('click', hidePlate);
   });
+  // a still cursor doesn't get a mouseleave when the page moves beneath it —
+  // any scroll clears the plate so it can never be stranded over the site
+  addEventListener('scroll', hidePlate, { passive:true });
+  if (lenis) lenis.on('scroll', hidePlate);
 }
 
 /* ————————————————— records — open the drawer ————————————————— */
@@ -823,7 +844,7 @@ $$('.record').forEach(rec => {
 
 /* magnetic pull on the primary actions */
 if (!isTouch && hasLibs){
-  $$('.chrome-cta, .bigcta, .mark').forEach(el => {
+  $$('.chrome-cta, .bigcta, .mark, #float-cta').forEach(el => {
     const sx = gsap.quickTo(el, 'x', { duration:.55, ease:'power3.out' });
     const sy = gsap.quickTo(el, 'y', { duration:.55, ease:'power3.out' });
     el.addEventListener('mousemove', e => {
@@ -858,6 +879,15 @@ function setChapter(n){
   $$('#chapter-name span').forEach(s => s.classList.toggle('on', +s.dataset.ch === n));
 }
 
+/* the floating cta picks up attention once the hero hint has faded,
+   and steps aside once the final invitation's own cta is on screen */
+function setFloatCta(on){
+  const el = $('#float-cta');
+  if (!el) return;
+  el.classList.toggle('on', on);
+  gsap.to(el, { opacity: on ? 1 : 0, duration:.5, ease:'power2.out' });
+}
+
 /* ————————————————— the film — scroll choreography ————————————————— */
 function buildFilm(){
   const h0chars = splitChars($('#h0-title'));
@@ -873,14 +903,20 @@ function buildFilm(){
     });
   });
 
+  ScrollTrigger.create({ trigger:'#ch1', start:'top 85%',
+    onEnter: () => setFloatCta(true), onLeaveBack: () => setFloatCta(false) });
+  ScrollTrigger.create({ trigger:'#ch5', start:'top 75%',
+    onEnter: () => setFloatCta(false), onLeaveBack: () => setFloatCta(true) });
+
   /* 00 · the dark — pinned; the words are exhaled back into dust */
   gsap.timeline({
-    scrollTrigger: { trigger:'#ch0', start:'top top', end:'+=130%', pin:true, scrub:.8 }
+    scrollTrigger: { trigger:'#ch0', start:'top top', end:'+=90%', pin:true, scrub:.8 }
   })
+  .to({}, { duration:.32 })
   .to(h0chars, { y: i => -60 - (i%7)*22, opacity:0, filter:'blur(10px)',
-      stagger:{ each:.012, from:'random' }, ease:'power2.in' }, 0)
-  .to('#h0-sub', { opacity:0, y:-30, duration:.4 }, 0)
-  .to('#hint', { opacity:0, duration:.3 }, 0)
+      stagger:{ each:.012, from:'random' }, ease:'power2.in' }, .32)
+  .to('#h0-sub', { opacity:0, y:-30, duration:.34 }, .32)
+  .to('#hint', { opacity:0, duration:.24 }, .3)
   .add(() => {}, 1);
 
   /* film opacity through ch0 */
@@ -889,7 +925,7 @@ function buildFilm(){
 
   /* 01 · the trace — seen scatters, remembered resolves, dust becomes the mark */
   const tl1 = gsap.timeline({
-    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=270%', pin:true, scrub:.9,
+    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=175%', pin:true, scrub:.9,
       onUpdate: st => {
         const p = st.progress;
         film.phase = Math.min(1, Math.max(0, (p - 0.18) / 0.6));
@@ -942,11 +978,26 @@ function buildFilm(){
       scrollTrigger:{ trigger:rec, start:'top 92%' } });
   });
 
-  /* 03 · portrait develops like a print */
-  gsap.to('#portrait-cover', { scaleY:0, duration:1.6, ease:'expo.inOut',
-    scrollTrigger:{ trigger:'#portrait', start:'top 78%' } });
+  /* 03 · portrait develops like a print — visibility-driven, not scroll-math-driven,
+     so a late-loading photo or a recalculated pin can never leave it hidden */
+  const pCover = $('#portrait-cover'), pWrap = $('#portrait');
+  if (pCover && pWrap){
+    if ('IntersectionObserver' in window){
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if (en.isIntersecting){
+            gsap.to(pCover, { scaleY:0, duration:1.5, ease:'expo.inOut' });
+            io.disconnect();
+          }
+        });
+      }, { threshold:.28 });
+      io.observe(pWrap);
+    } else {
+      pCover.style.transform = 'scaleY(0)';
+    }
+  }
   const pImg = $('#portrait-img');
-  if (pImg) gsap.fromTo(pImg, { scale:1.1 }, { scale:1.0, ease:'none',
+  if (pImg) gsap.fromTo(pImg, { y:22 }, { y:-22, ease:'none',
     scrollTrigger:{ trigger:'#portrait', start:'top bottom', end:'bottom top', scrub:true } });
   $$('#about p').forEach(p => {
     gsap.fromTo(p, { opacity:0, y:36, filter:'blur(4px)' },
@@ -959,7 +1010,7 @@ function buildFilm(){
 
   /* 04 · the fade — the image dissolves, the work stays */
   gsap.timeline({
-    scrollTrigger: { trigger:'#ch4', start:'top top', end:'+=240%', pin:true, scrub:.9,
+    scrollTrigger: { trigger:'#ch4', start:'top top', end:'+=190%', pin:true, scrub:.9,
       onUpdate: st => {
         const p = st.progress;
         film.phase = 2 + Math.min(1, Math.max(0, (p - 0.12) / 0.62));
@@ -992,13 +1043,31 @@ function buildFilm(){
       .add(() => $('#inv-title').classList.add('lit'), '-=.3');
 
   ScrollTrigger.refresh();
+
+  // keep every pinned section's math honest as images/video load in later
+  let refreshPending = false;
+  const safeRefresh = () => {
+    if (refreshPending) return;
+    refreshPending = true;
+    requestAnimationFrame(() => requestAnimationFrame(() => { ScrollTrigger.refresh(); refreshPending = false; }));
+  };
+  $$('img, video').forEach(el => {
+    if (el.tagName === 'VIDEO'){
+      if (el.readyState < 2) el.addEventListener('loadeddata', safeRefresh, { once:true });
+    } else if (!el.complete){
+      el.addEventListener('load', safeRefresh, { once:true });
+      el.addEventListener('error', safeRefresh, { once:true });
+    }
+  });
+  addEventListener('resize', safeRefresh);
 }
 
 /* ————————————————— static fallback content ————————————————— */
 function buildStatic(){
   film.phase = 1; film.opacity = .5; film.wobble = .2;
   setChapter(0);
-  $$('#chapter, #hint, .mark, .chrome-cta').forEach(el => el && (el.style.opacity = 1));
+  $$('#chapter, #hint, .mark, .chrome-cta, #float-cta').forEach(el => el && (el.style.opacity = 1));
+  const fc = $('#float-cta'); if (fc) fc.classList.add('on');
   $$('.chead .word > span').forEach(s => s.style.transform = 'none');
   $$('.chead .rule').forEach(r => r.style.transform = 'scaleX(1)');
   $$('#inv-title .word > span').forEach(s => s.style.transform = 'none');
