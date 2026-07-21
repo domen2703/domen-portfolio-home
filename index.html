@@ -219,7 +219,8 @@ section{position:relative}
 #ch5 h2 .accent::after{content:"";position:absolute;left:2%;right:2%;bottom:.06em;height:2px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform 1s var(--ease-io) .1s}
 #ch5 h2.lit .accent::after{transform:scaleX(1)}
 #ch5 .invsub{margin-top:5vh;font-size:clamp(14px,1.2vw,17px);line-height:1.8;color:var(--cream-70);font-weight:300}
-#ch5 .bigcta{display:inline-flex;align-items:center;gap:20px;margin-top:8vh;font-weight:400;font-size:13px;letter-spacing:.4em;text-transform:lowercase;color:var(--cream);position:relative;padding:28px 48px;border:1px solid rgba(236,229,216,.45);border-radius:99px;overflow:hidden;background:rgba(10,9,8,.38);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:color .6s .05s;will-change:transform;animation:cta-stroke 5s ease-in-out infinite}
+#ch5 .bigcta{display:inline-flex;align-items:center;gap:20px;margin-top:8vh;font-weight:400;font-size:13px;letter-spacing:.4em;text-transform:lowercase;color:var(--cream);position:relative;padding:28px 48px;border:1px solid rgba(236,229,216,.45);border-radius:99px;overflow:hidden;background:rgba(10,9,8,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:color .6s .05s;will-change:transform;animation-name:cta-stroke;animation-duration:5s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-play-state:paused}
+#ch5 .bigcta.in-view{animation-play-state:running}
 @keyframes cta-stroke{0%,100%{border-color:rgba(236,229,216,.45)}50%{border-color:rgba(229,53,43,.75)}}
 @media (prefers-reduced-motion:reduce){#ch5 .bigcta{animation:none}}
 #ch5 .bigcta::after{content:"";position:absolute;left:26px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:var(--red);z-index:1}
@@ -531,7 +532,12 @@ const lerp = (a,b,t)=>a+(b-a)*t;
   ctx.putImageData(id,0,0);
   const el = $('#grain'); el.style.backgroundImage = `url(${g.toDataURL()})`;
   if (!prefersReduced){
-    setInterval(()=>{ el.style.backgroundPosition = `${Math.random()*160|0}px ${Math.random()*160|0}px`; }, 84);
+    let grainTimer = null;
+    const startGrain = () => { if (!grainTimer) grainTimer = setInterval(() =>
+      el.style.backgroundPosition = `${Math.random()*160|0}px ${Math.random()*160|0}px`, 84); };
+    const stopGrain = () => { clearInterval(grainTimer); grainTimer = null; };
+    document.addEventListener('visibilitychange', () => document.hidden ? stopGrain() : startGrain());
+    startGrain();
   }
 })();
 
@@ -1020,7 +1026,7 @@ function buildFilm(){
     addEventListener(ev, () => userScrolled = true, { passive:true }));
 
   const heroOut = gsap.timeline({ paused:true })
-    .to(h0chars, { y: i => -60 - (i%7)*22, opacity:0, filter:'blur(10px)',
+    .to(h0chars, { y: i => -60 - (i%7)*22, opacity:0,
         stagger:{ each:.012, from:'random' }, duration:.9, ease:'power2.in' }, 0)
     .to('#h0-sub', { opacity:0, y:-30, duration:.7 }, 0)
     .to('#hint', { opacity:0, duration:.5 }, 0);
@@ -1050,10 +1056,10 @@ function buildFilm(){
         film.wobble = wobbleFor(film.phase);
       } }
   });
-  tl1.fromTo(seenChars, { opacity:0, filter:'blur(8px)', y:14 },
-      { opacity:1, filter:'blur(0px)', y:0, stagger:.012, duration:.1, ease:'power2.out' }, 0)
+  tl1.fromTo(seenChars, { opacity:0, y:14 },
+      { opacity:1, y:0, stagger:.012, duration:.1, ease:'power2.out' }, 0)
      .to(seenChars, { x: i => (Math.sin(i*7.3)*140), y: i => -30 - (Math.abs(Math.cos(i*3.1))*120),
-      opacity:0, filter:'blur(14px)', rotation: i => Math.sin(i)*10,
+      opacity:0, rotation: i => Math.sin(i)*10,
       stagger:{ each:.008, from:'center' }, duration:.3, ease:'power2.in' }, .22)
      .fromTo('#rem', { opacity:0, filter:'blur(18px)', scale:.985 },
       { opacity:1, filter:'blur(0px)', scale:1, duration:.32, ease:'power2.out' }, .38)
@@ -1129,7 +1135,7 @@ function buildFilm(){
       } }
   })
   .fromTo(fadeChars, { opacity:0, y:16 }, { opacity:1, y:0, stagger:.012, duration:.1, ease:'power2.out' }, 0)
-  .to(fadeChars, { y: i => -70 - (i%5)*30, opacity:0, filter:'blur(16px)',
+  .to(fadeChars, { y: i => -70 - (i%5)*30, opacity:0,
       stagger:{ each:.01, from:'random' }, duration:.34, ease:'power1.in' }, .2)
   .fromTo('#stays', { opacity:0, filter:'blur(14px)' },
       { opacity:1, filter:'blur(0px)', duration:.3, ease:'power2.out' }, .34)
@@ -1152,6 +1158,15 @@ function buildFilm(){
   const invT = gsap.timeline({ scrollTrigger:{ trigger:'#inv-title', start:'top 80%' } });
   invT.to('#inv-title .word > span', { y:0, duration:1.2, stagger:.08, ease:'expo.out' })
       .add(() => $('#inv-title').classList.add('lit'), '-=.3');
+
+  // the CTA's infinite stroke-color cycle only costs anything while it's
+  // actually visible — no reason to animate a backdrop-filtered element
+  // sitting off-screen for the rest of the page
+  const bigCta = $('#ch5 .bigcta');
+  if (bigCta && 'IntersectionObserver' in window){
+    new IntersectionObserver(es => es.forEach(en =>
+      bigCta.classList.toggle('in-view', en.isIntersecting)), { threshold:.1 }).observe(bigCta);
+  } else if (bigCta) bigCta.classList.add('in-view');
 
   ScrollTrigger.refresh();
 
@@ -1188,6 +1203,7 @@ function buildStatic(){
   const seen = $('#seen'); seen.style.position='static'; seen.style.transform='none'; seen.style.marginBottom='0.2em';
   $('#stays').style.opacity = 1; $('#stays').style.filter = 'none';
   const ml = $('#markline'); ml.style.opacity = 1; ml.style.position='static'; ml.style.transform='none'; ml.style.margin='28px auto 0'; $('#markline-fill').style.transform = 'scaleX(1)';
+  const bigCtaStatic = $('#ch5 .bigcta'); if (bigCtaStatic) bigCtaStatic.classList.add('in-view');
 }
 
 /* ————————————————— overture ————————————————— */
@@ -1217,8 +1233,8 @@ function openVeil(){
     .set(veil, { display:'none' })
     /* first breath : the room is dark, the dust is already there */
     .to(film, { opacity:.8, duration:2.4, ease:'power1.inOut' }, '-=1.1')
-    .fromTo(h0chars, { opacity:0, filter:'blur(12px)', y:26 },
-      { opacity:1, filter:'blur(0px)', y:0, duration:1.5, stagger:{ each:.03, from:'random' }, ease:'expo.out' }, '-=1.0')
+    .fromTo(h0chars, { opacity:0, y:26 },
+      { opacity:1, y:0, duration:1.5, stagger:{ each:.03, from:'random' }, ease:'expo.out' }, '-=1.0')
     .to('#h0-sub', { opacity:1, duration:1.2 }, '-=.7')
     .to('.mark', { opacity:1, duration:1 }, '-=.9')
     .to('.chrome-cta', { opacity:1, duration:1 }, '-=.85')
