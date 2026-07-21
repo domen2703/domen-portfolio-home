@@ -630,7 +630,16 @@ function initThree(){
 
   scene3 = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 60);
-  camera.position.z = 8.6;
+  const BASE_Z = 8.6;
+  const zForViewport = () => {
+    // a fixed world-space size fills more of the frame as the screen narrows —
+    // pull the camera back on tall/narrow viewports so the mark reads at the
+    // same relative scale on a phone as it does on a desktop
+    const aspect = innerWidth / Math.max(innerHeight, 1);
+    const mult = Math.min(1.85, Math.max(1, 1.3 / aspect));
+    return BASE_Z * mult;
+  };
+  camera.position.z = zForViewport();
 
   const dust = new Float32Array(N*3), line = new Float32Array(N*3), rand = new Float32Array(N*4);
   for (let i=0;i<N;i++){
@@ -672,7 +681,7 @@ function initThree(){
         float p = uPhase;
         vec3 dust = position;
         vec3 rise = dust*1.45 + vec3(0., 3.2, 0.);
-        vec3 big  = aMark*1.9 + vec3(0., -0.1, 0.6);
+        vec3 big  = aMark*1.68 + vec3(0., -0.1, 0.6);
         vec3 pos;
         if      (p < 1.0) pos = mix(dust, aMark, ss(p));
         else if (p < 2.0) pos = mix(aMark, aLine, ss(p-1.0));
@@ -729,7 +738,9 @@ function initThree(){
   tick();
 
   addEventListener('resize', () => {
-    camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+    camera.aspect = innerWidth/innerHeight;
+    camera.position.z = zForViewport();
+    camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
   });
 }
@@ -815,7 +826,11 @@ if (!isTouch && CINEMA){
       $('#cur-label').textContent = head.getAttribute('aria-expanded') === 'true' ? 'close' : 'open';
       if (head.getAttribute('aria-expanded') === 'true') return;
       if (vidSrc && plateVid){
-        // the project's own animation becomes the cover of its hover preview
+        // the project's own animation becomes the cover of its hover preview —
+        // wipe any previous project's frame off the canvas first, or it can
+        // flash through the crossfade while the video decodes its first frame
+        plateCtx.fillStyle = '#0a0908';
+        plateCtx.fillRect(0, 0, plateCv.width, plateCv.height);
         if (plateVid.getAttribute('src') !== vidSrc) plateVid.setAttribute('src', vidSrc);
         plate.classList.add('video-on');
         plateVid.currentTime = 0;
@@ -923,6 +938,27 @@ if (clockEl){
   tickClock(); setInterval(tickClock, 15000);
 }
 
+/* the film has chapters — arrow keys step between them, the way a director's
+   scrubber would, rather than fighting the pinned scroll pixel by pixel */
+{
+  const chapters = $$('section[data-chapter]');
+  addEventListener('keydown', e => {
+    if (!chapters.length) return;
+    if (document.activeElement && document.activeElement.matches('input,textarea,[contenteditable="true"]')) return;
+    const stepDown = e.key === 'ArrowDown' || e.key === 'PageDown';
+    const stepUp = e.key === 'ArrowUp' || e.key === 'PageUp';
+    if (!stepDown && !stepUp) return;
+    e.preventDefault();
+    const y = window.scrollY || window.pageYOffset;
+    let target;
+    if (stepDown) target = chapters.find(s => s.getBoundingClientRect().top + y > y + 4);
+    else { const above = chapters.filter(s => s.getBoundingClientRect().top + y < y - 4); target = above[above.length - 1]; }
+    if (!target) return;
+    if (lenis) lenis.scrollTo(target, { duration: 1.5, easing: t => 1 - Math.pow(1 - t, 4) });
+    else target.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth' });
+  }, { passive:false });
+}
+
 /* the mark returns you to the beginning */
 $('.mark').addEventListener('click', e => {
   e.preventDefault();
@@ -983,7 +1019,7 @@ function buildFilm(){
   let heroGone = false;
 
   ScrollTrigger.create({
-    trigger:'#ch0', start:'top top', end:'+=115%', pin:true,
+    trigger:'#ch0', start:'top top', end:'+=45%', pin:true,
     onUpdate: st => {
       if (!heroGone && userScrolled && st.progress > 0.03){
         heroGone = true; heroOut.timeScale(1).play();
@@ -999,7 +1035,7 @@ function buildFilm(){
 
   /* 01 · the trace — seen scatters, remembered resolves, dust becomes the mark */
   const tl1 = gsap.timeline({
-    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=175%', pin:true, scrub:.9,
+    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=105%', pin:true, scrub:.9,
       onUpdate: st => {
         const p = st.progress;
         film.phase = Math.min(1, Math.max(0, (p - 0.18) / 0.6));
