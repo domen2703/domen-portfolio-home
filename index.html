@@ -821,14 +821,6 @@ document.fonts.ready.then(buildPlates);
 const plate = $('#plate'), plateCv = $('#plate-canvas'), plateCtx = plateCv.getContext('2d'), plateVid = $('#plate-video');
 if (!isTouch && CINEMA){
   let px = 0, py = 0, tx = 0, ty = 0, lastX = 0, vel = 0, shown = false;
-  const follow = () => {
-    tx = mouse.x + 30; ty = mouse.y - plate.offsetHeight/2;
-    vel = lerp(vel, (mouse.x - lastX), .1); lastX = mouse.x;
-    px = lerp(px, tx, .11); py = lerp(py, ty, .11);
-    plate.style.transform = `translate3d(${px}px,${py}px,0) rotate(${Math.max(-7,Math.min(7,vel*0.35))}deg)`;
-    requestAnimationFrame(follow);
-  };
-  follow();
   const hidePlate = () => {
     if (!shown) return;
     shown = false;
@@ -836,6 +828,21 @@ if (!isTouch && CINEMA){
     plate.classList.remove('video-on');
     if (plateVid && !plateVid.paused) plateVid.pause();
   };
+  const follow = () => {
+    tx = mouse.x + 30; ty = mouse.y - plate.offsetHeight/2;
+    vel = lerp(vel, (mouse.x - lastX), .1); lastX = mouse.x;
+    px = lerp(px, tx, .11); py = lerp(py, ty, .11);
+    plate.style.transform = `translate3d(${px}px,${py}px,0) rotate(${Math.max(-7,Math.min(7,vel*0.35))}deg)`;
+    // a drawer opening or closing shifts every row beneath it without the
+    // mouse ever moving, so no mouseleave fires — check the real cursor
+    // position against reality every frame instead of trusting hover events
+    if (shown){
+      const hit = document.elementFromPoint(mouse.x, mouse.y);
+      if (!hit || !hit.closest('.rec-head')) hidePlate();
+    }
+    requestAnimationFrame(follow);
+  };
+  follow();
   $$('.record').forEach((rec,i) => {
     const head = rec.querySelector('.rec-head');
     const vidSrc = rec.dataset.plateVideo;
@@ -868,6 +875,7 @@ if (!isTouch && CINEMA){
   // a still cursor doesn't get a mouseleave when the page moves beneath it —
   // any scroll clears the plate so it can never be stranded over the site
   addEventListener('scroll', hidePlate, { passive:true });
+  document.addEventListener('mouseleave', hidePlate);
   // warm the hover video just before the archive arrives
   if (plateVid && 'IntersectionObserver' in window){
     const rc = $('#records');
