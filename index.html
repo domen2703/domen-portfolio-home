@@ -500,7 +500,8 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.3.23/dist/lenis.css">
+<script src="https://unpkg.com/lenis@1.3.23/dist/lenis.min.js"></script>
 <script>
 (() => {
 'use strict';
@@ -1026,7 +1027,7 @@ function buildFilm(){
   let heroGone = false;
 
   ScrollTrigger.create({
-    trigger:'#ch0', start:'top top', end:'+=45%', pin:true,
+    trigger:'#ch0', start:'top top', end:'+=60%', pin:true,
     onUpdate: st => {
       if (!heroGone && userScrolled && st.progress > 0.03){
         heroGone = true; heroOut.timeScale(1).play();
@@ -1042,7 +1043,7 @@ function buildFilm(){
 
   /* 01 · the trace — seen scatters, remembered resolves, dust becomes the mark */
   const tl1 = gsap.timeline({
-    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=105%', pin:true, scrub:.9,
+    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=120%', pin:true, scrub:true,
       onUpdate: st => {
         const p = st.progress;
         film.phase = Math.min(1, Math.max(0, (p - 0.18) / 0.6));
@@ -1120,7 +1121,7 @@ function buildFilm(){
 
   /* 04 · the fade — the image dissolves, the work stays */
   gsap.timeline({
-    scrollTrigger: { trigger:'#ch4', start:'top top', end:'+=190%', pin:true, scrub:.9,
+    scrollTrigger: { trigger:'#ch4', start:'top top', end:'+=150%', pin:true, scrub:true,
       onUpdate: st => {
         const p = st.progress;
         film.phase = 2 + Math.min(1, Math.max(0, (p - 0.12) / 0.62));
