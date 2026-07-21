@@ -72,11 +72,14 @@ body.touch a,body.touch button{cursor:pointer}
 #veil .veil-word{font-family:var(--clash);font-weight:300;font-size:10px;letter-spacing:.42em;text-transform:lowercase;color:var(--cream-40);opacity:0}
 
 /* ————— cursor ————— */
-#cur-dot,#cur-ring{position:fixed;top:0;left:0;z-index:150;pointer-events:none;border-radius:50%;will-change:transform}
-#cur-dot{width:5px;height:5px;background:var(--cream);margin:-2.5px 0 0 -2.5px}
-#cur-ring{width:34px;height:34px;border:1px solid var(--cream-24);margin:-17px 0 0 -17px;display:flex;align-items:center;justify-content:center;transition:width .5s var(--ease-out),height .5s var(--ease-out),margin .5s var(--ease-out),border-color .5s,background-color .5s}
+#cur-dot{position:fixed;top:0;left:0;z-index:150;pointer-events:none;will-change:transform;width:23px;height:24px;margin:-6px 0 0 -2px;transform-origin:10% 26%;color:var(--cream);transition:color .4s ease}
+#cur-dot svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 9px rgba(0,0,0,.4))}
+#cur-dot path{fill:currentColor}
+#cur-ring{position:fixed;top:0;left:0;z-index:150;pointer-events:none;border-radius:50%;will-change:transform;width:34px;height:34px;border:1px solid var(--cream-24);margin:-17px 0 0 -17px;display:flex;align-items:center;justify-content:center;transition:width .5s var(--ease-out),height .5s var(--ease-out),margin .5s var(--ease-out),border-color .5s,background-color .5s}
 #cur-ring span{font-family:var(--clash);font-weight:400;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);opacity:0;transition:opacity .3s;transform:translateX(.15em)}
 body.cur-hover #cur-ring{width:56px;height:56px;margin:-28px 0 0 -28px;border-color:var(--cream-40)}
+body.cur-cta #cur-dot{color:var(--red)}
+body.cur-cta #cur-dot svg{filter:drop-shadow(0 4px 16px rgba(229,53,43,.6))}
 body.cur-view #cur-dot{opacity:0}
 body.cur-view #cur-ring{width:84px;height:84px;margin:-42px 0 0 -42px;background:var(--cream);border-color:var(--cream)}
 body.cur-view #cur-ring span{opacity:1}
@@ -187,16 +190,13 @@ section{position:relative}
 
 /* ch3 — behind the work */
 #ch3{padding:16vh 0 22vh}
-#ch3 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(40px,6vw,110px);padding:0 var(--pad);align-items:center}
-#ch3 .portrait{position:relative;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:220px}
-#ch3 .portrait .backdrop{position:absolute;left:50%;bottom:0;width:150%;height:88%;transform:translateX(-50%);background:radial-gradient(ellipse 55% 68% at 50% 100%,rgba(236,229,216,.11),transparent 72%);z-index:0;pointer-events:none}
-#ch3 .portrait::before{content:"";position:absolute;inset:0;border:1px solid var(--cream-10);z-index:4;pointer-events:none}
-#ch3 .portrait img{position:relative;z-index:1;display:block;width:auto;max-width:100%;height:auto;max-height:min(70vh,620px);filter:grayscale(1) contrast(1.05) brightness(.94)}
-#ch3 .portrait .shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(10,9,8,.4));z-index:2;pointer-events:none}
-#ch3 .portrait .cover{position:absolute;inset:0;background:var(--ink);z-index:3;transform-origin:top}
+#ch3 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(40px,6vw,110px);padding:0 var(--pad);align-items:stretch}
+#ch3 .portrait{position:relative;width:100%;height:100%}
+#ch3 .portrait img{display:block;width:100%;height:100%;object-fit:contain;object-position:bottom;filter:contrast(1.03)}
 #ch3 .who{font-size:11px;font-weight:400;letter-spacing:.34em;color:var(--cream-55);text-transform:lowercase;margin-bottom:26px}
 #ch3 .name{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(40px,5vw,80px);line-height:1.04;margin-bottom:7vh}
 #ch3 .about p{font-size:clamp(16px,1.5vw,21px);line-height:1.8;font-weight:300;color:var(--cream-70);margin-bottom:2.6em;max-width:52ch}
+#ch3 .about p:last-child{margin-bottom:0}
 #ch3 .about p b{color:var(--cream);font-weight:400}
 #ch3 .about p .rd{color:var(--red)}
 #ch3 .about .ln{display:block;overflow:hidden}
@@ -249,8 +249,7 @@ footer a:hover::after{transform:scaleX(1);transform-origin:left}
   .rec-info{position:static}
   .rec-gallery{grid-template-columns:1fr}
   #ch3 .grid{grid-template-columns:1fr;gap:52px}
-  #ch3 .portrait{max-width:340px;margin:0 auto}
-  #ch3 .portrait img{max-height:52vh}
+  #ch3 .portrait{height:52vh;max-width:100%}
   #plate{display:none}
   #chapter .name{display:none}
 }
@@ -278,7 +277,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
 </div>
 
 <!-- cursor -->
-<div id="cur-dot"></div>
+<div id="cur-dot" aria-hidden="true"><svg viewBox="0 0 962 1008" xmlns="http://www.w3.org/2000/svg"><path d="M106.715 315.132C106.707 315.124 106.7 315.115 106.694 315.105C96.2298 296.95 104.213 275.255 121.019 266.69C125.782 264.173 131.274 262.718 137.271 262.716C137.277 262.716 137.283 262.717 137.288 262.719C137.293 262.722 137.299 262.724 137.305 262.724L856.938 262.727C865.866 262.918 871.324 272.609 866.859 280.343L832.325 340.157C825.18 352.533 811.975 360.157 797.684 360.157L306.864 360.155C306.859 360.155 306.853 360.153 306.848 360.15C306.843 360.148 306.836 360.147 306.831 360.147C300.834 360.149 295.342 361.604 290.579 364.121C273.773 372.686 265.79 394.381 276.254 412.536C276.26 412.546 276.267 412.555 276.275 412.563C276.283 412.571 276.29 412.58 276.296 412.59L521.855 837.907C529 850.283 529.001 865.531 521.855 877.907L487.082 938.135C485.248 941.312 482.284 943.182 479.118 943.748C474.489 944.752 469.338 942.968 466.546 938.364L106.736 315.159C106.73 315.149 106.723 315.14 106.715 315.132Z"/></svg></div>
 <div id="cur-ring"><span id="cur-label">open</span></div>
 
 <!-- fixed chrome -->
@@ -449,9 +448,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
     </div>
     <div class="grid">
       <figure class="portrait" id="portrait">
-        <span class="backdrop"></span>
-        <img id="portrait-img" src="https://domenmarkeljc.com/wp-content/uploads/2026/06/aboutttd.png" alt="Domen Markeljc, portrait" onerror="this.closest('figure').style.display='none'">
-        <span class="shade"></span><span class="cover" id="portrait-cover"></span>
+        <img id="portrait-img" src="assets/img/domen-portrait.png" alt="Domen Markeljc, portrait" onerror="this.closest('figure').style.display='none'">
       </figure>
       <div>
         <p class="who" data-io>the designer</p>
@@ -567,26 +564,43 @@ if (CINEMA && window.Lenis){
 const mouse = { x: innerWidth/2, y: innerHeight/2, nx: 0, ny: 0 };
 if (!isTouch){
   const dot = $('#cur-dot'), ring = $('#cur-ring');
-  let dx=mouse.x, dy=mouse.y, rx=mouse.x, ry=mouse.y;
+  let dx=mouse.x, dy=mouse.y, rx=mouse.x, ry=mouse.y, rot=0, scale=1;
+  const scaleState = { v: 1 };
+  const setScale = (target, dur, ease) => {
+    if (hasLibs) gsap.to(scaleState, { v: target, duration: dur, ease, onUpdate: () => scale = scaleState.v });
+    else scale = target;
+  };
   addEventListener('mousemove', e => {
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.nx = e.clientX/innerWidth*2-1; mouse.ny = e.clientY/innerHeight*2-1;
   }, {passive:true});
+  addEventListener('mousedown', () => setScale(.7, .18, 'power2.out'));
+  addEventListener('mouseup', () => setScale(1, .5, 'back.out(3)'));
   const loop = () => {
+    const pdx = dx;
     dx = lerp(dx, mouse.x, .55); dy = lerp(dy, mouse.y, .55);
     rx = lerp(rx, mouse.x, .16); ry = lerp(ry, mouse.y, .16);
-    dot.style.transform = `translate3d(${dx}px,${dy}px,0)`;
+    // the mark leans into the direction of travel, like a weathervane —
+    // a small, steady tilt rather than a full spin
+    const targetRot = Math.max(-14, Math.min(14, (dx - pdx) * 1.1));
+    rot = lerp(rot, targetRot, .15);
+    dot.style.transform = `translate3d(${dx}px,${dy}px,0) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
     ring.style.transform = `translate3d(${rx}px,${ry}px,0)`;
     requestAnimationFrame(loop);
   };
   loop();
   document.addEventListener('mouseover', e => {
-    if (e.target.closest('[data-view]')) document.body.classList.add('cur-view');
-    else if (e.target.closest('a,button,[data-hover]')) document.body.classList.add('cur-hover');
+    const cta = e.target.closest('.bigcta, .chrome-cta, #float-cta');
+    const view = e.target.closest('[data-view]');
+    const hoverable = e.target.closest('a,button,[data-hover]');
+    if (view) document.body.classList.add('cur-view');
+    else if (cta){ document.body.classList.add('cur-cta'); setScale(1.4, .4, 'back.out(2)'); }
+    else if (hoverable){ document.body.classList.add('cur-hover'); setScale(1.22, .35, 'back.out(2)'); }
   });
   document.addEventListener('mouseout', e => {
     if (e.target.closest('[data-view]')) document.body.classList.remove('cur-view');
-    if (e.target.closest('a,button,[data-hover]')) document.body.classList.remove('cur-hover');
+    if (e.target.closest('.bigcta, .chrome-cta, #float-cta')){ document.body.classList.remove('cur-cta'); setScale(1, .35, 'power2.out'); }
+    else if (e.target.closest('a,button,[data-hover]')){ document.body.classList.remove('cur-hover'); setScale(1, .35, 'power2.out'); }
   });
 } else {
   addEventListener('touchmove', e => {
@@ -596,7 +610,7 @@ if (!isTouch){
 }
 
 /* ————————————————— the particle film (three.js) ————————————————— */
-const film = { phase: 0, opacity: 0, wobble: 1 };
+const film = { phase: 0, opacity: 0, wobble: 1, redAmount: 0 };
 let renderer, scene3, camera, points, uniforms;
 
 function sampleMark(N){
@@ -663,11 +677,12 @@ function initThree(){
   geo.setAttribute('aRand', new THREE.BufferAttribute(rand, 4));
 
   uniforms = {
-    uTime:    { value: 0 },
-    uPhase:   { value: 0 },
-    uWobble:  { value: 1 },
-    uOpacity: { value: 0 },
-    uSize:    { value: (isTouch?9:11) * Math.min(devicePixelRatio,1.75) }
+    uTime:      { value: 0 },
+    uPhase:     { value: 0 },
+    uWobble:    { value: 1 },
+    uOpacity:   { value: 0 },
+    uRedAmount: { value: 0 },
+    uSize:      { value: (isTouch?9:11) * Math.min(devicePixelRatio,1.75) }
   };
 
   const mat = new THREE.ShaderMaterial({
@@ -702,7 +717,7 @@ function initThree(){
       }`,
     fragmentShader: `
       precision mediump float;
-      uniform float uOpacity;
+      uniform float uOpacity, uRedAmount;
       varying float vRed; varying float vFade;
       void main(){
         vec2 uv = gl_PointCoord - 0.5;
@@ -710,8 +725,9 @@ function initThree(){
         float a = smoothstep(0.5, 0.06, d);
         vec3 cream = vec3(0.926, 0.898, 0.847);
         vec3 red   = vec3(0.898, 0.208, 0.169);
-        vec3 col = mix(cream, red, vRed);
-        gl_FragColor = vec4(col, a * uOpacity * vFade * 0.34 * (vRed > 0.5 ? 2.4 : 1.0));
+        float redness = max(vRed, uRedAmount);
+        vec3 col = mix(cream, red, redness);
+        gl_FragColor = vec4(col, a * uOpacity * vFade * 0.34 * mix(1.0, 2.4, redness));
       }`
   });
 
@@ -728,6 +744,7 @@ function initThree(){
     uniforms.uPhase.value = film.phase;
     uniforms.uOpacity.value = film.opacity;
     uniforms.uWobble.value = film.wobble;
+    uniforms.uRedAmount.value = film.redAmount;
     camX = lerp(camX, mouse.nx*0.42, .04);
     camY = lerp(camY, -mouse.ny*0.3, .04);
     camera.position.x = camX; camera.position.y = camY;
@@ -1068,6 +1085,16 @@ function buildFilm(){
     onUpdate: st => film.opacity = a + (b - a) * st.progress });
   fadeST('#ch2', 'top 70%', 'top 20%', .8, .38);
 
+  /* the dust stays cream through the hero and the morph — precious red only
+     begins to bleed in once the archive itself opens, deepening chapter by
+     chapter until the closing mark is fully red */
+  const redST = (trigger, start, end, a, b) => ScrollTrigger.create({ trigger, start, end, scrub:true,
+    onUpdate: st => film.redAmount = a + (b - a) * st.progress });
+  redST('#ch2', 'top 70%', 'top 20%', 0, .28);
+  redST('#ch3', 'top bottom', 'top 15%', .28, .5);
+  redST('#ch4', 'top bottom', 'top 30%', .5, .82);
+  redST('#ch5', 'top 80%', 'center center', .82, 1);
+
   /* chapter heads */
   $$('[data-chead]').forEach(head => {
     gsap.timeline({ scrollTrigger:{ trigger:head, start:'top 82%' } })
@@ -1088,24 +1115,7 @@ function buildFilm(){
       scrollTrigger:{ trigger:rec, start:'top 92%' } });
   });
 
-  /* 03 · portrait develops like a print — visibility-driven, not scroll-math-driven,
-     so a late-loading photo or a recalculated pin can never leave it hidden */
-  const pCover = $('#portrait-cover'), pWrap = $('#portrait');
-  if (pCover && pWrap){
-    if ('IntersectionObserver' in window){
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach(en => {
-          if (en.isIntersecting){
-            gsap.to(pCover, { scaleY:0, duration:1.5, ease:'expo.inOut' });
-            io.disconnect();
-          }
-        });
-      }, { threshold:.28 });
-      io.observe(pWrap);
-    } else {
-      pCover.style.transform = 'scaleY(0)';
-    }
-  }
+  /* 03 · portrait — a quiet parallax bob, nothing else in the way of the image */
   const pImg = $('#portrait-img');
   if (pImg) gsap.fromTo(pImg, { y:22 }, { y:-22, ease:'none',
     scrollTrigger:{ trigger:'#portrait', start:'top bottom', end:'bottom top', scrub:true } });
@@ -1183,7 +1193,6 @@ function buildStatic(){
   $$('.chead .rule').forEach(r => r.style.transform = 'scaleX(1)');
   $$('#inv-title .word > span').forEach(s => s.style.transform = 'none');
   $('#inv-title').classList.add('lit');
-  $('#portrait-cover').style.transform = 'scaleY(0)';
   const rem = $('#rem'); rem.style.position='static'; rem.style.transform='none'; rem.style.opacity=1; rem.style.filter='none';
   const seen = $('#seen'); seen.style.position='static'; seen.style.transform='none'; seen.style.marginBottom='0.2em';
   $('#stays').style.opacity = 1; $('#stays').style.filter = 'none';
