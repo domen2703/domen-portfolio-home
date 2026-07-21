@@ -34,6 +34,12 @@
   --pad:clamp(20px,4vw,64px);
   --ease-out:cubic-bezier(.19,1,.22,1);
   --ease-io:cubic-bezier(.77,0,.18,1);
+  /* transitions-dev token pass — button press/release feedback */
+  --btn-press-dur:120ms;
+  --btn-press-ease:cubic-bezier(.4,0,.2,1);
+  --btn-release-dur:420ms;
+  --btn-release-ease:cubic-bezier(.34,1.45,.64,1);
+  --btn-press-scale:.96;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -156,8 +162,9 @@ section{position:relative}
 .record{border-bottom:1px solid var(--cream-10);position:relative}
 .record::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .9s var(--ease-io);pointer-events:none}
 .record:hover::after{transform:scaleX(1)}
-.rec-head{appearance:none;background:none;border:0;color:inherit;font:inherit;text-align:left;width:100%;display:grid;grid-template-columns:80px 1fr auto;align-items:baseline;gap:24px;padding:clamp(28px,4.4vh,48px) var(--pad);position:relative;transition:background-color .6s}
+.rec-head{appearance:none;background:none;border:0;color:inherit;font:inherit;text-align:left;width:100%;display:grid;grid-template-columns:80px 1fr auto;align-items:baseline;gap:24px;padding:clamp(28px,4.4vh,48px) var(--pad);position:relative;transition:background-color .6s,transform var(--btn-press-dur) var(--btn-press-ease)}
 .rec-head:hover{background:var(--cream-06)}
+.rec-head:active{transform:scale(.994);transition-duration:var(--btn-press-dur)}
 .rec-num{font-size:11px;font-weight:400;letter-spacing:.3em;color:var(--cream-55);transition:color .5s}
 .record:hover .rec-num{color:var(--red)}
 .rec-title{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(34px,5.6vw,88px);line-height:1;letter-spacing:-.01em;transition:transform .8s var(--ease-out)}
@@ -171,8 +178,9 @@ section{position:relative}
 .rec-copy b{color:var(--cream);font-weight:400}
 .rec-tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .rec-tags span{font-size:10px;letter-spacing:.26em;text-transform:lowercase;font-weight:400;color:var(--cream-55);border:1px solid var(--cream-24);padding:8px 14px;border-radius:99px}
-.rec-link{display:inline-flex;align-items:center;gap:12px;margin-top:30px;font-size:11px;font-weight:400;letter-spacing:.3em;text-transform:lowercase;color:var(--cream);border-bottom:1px solid var(--cream-40);padding-bottom:6px;transition:border-color .5s}
+.rec-link{display:inline-flex;align-items:center;gap:12px;margin-top:30px;font-size:11px;font-weight:400;letter-spacing:.3em;text-transform:lowercase;color:var(--cream);border-bottom:1px solid var(--cream-40);padding-bottom:6px;transition:border-color .5s,transform var(--btn-press-dur) var(--btn-press-ease)}
 .rec-link:hover{border-color:var(--red)}
+.rec-link:active{transform:scale(.97);transition-duration:var(--btn-press-dur)}
 .rec-link::after{content:"↗";font-size:12px;color:var(--red)}
 .rec-gallery{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.4vw,20px);align-items:start}
 .gal{position:relative;margin:0}
@@ -524,6 +532,20 @@ const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const lerp = (a,b,t)=>a+(b-a)*t;
 
+/* small text-state swap on the cursor's open/close label, in the spirit of
+   transitions-dev's text-swap pattern — shared by the hover preview and
+   the click handler below so both get the same cross-fade */
+const setCurLabel = txt => {
+  const el = $('#cur-label');
+  if (!el || el.textContent === txt) return;
+  if (window.gsap && !document.documentElement.classList.contains('static') && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    gsap.to(el, { opacity:0, y:-6, duration:.12, ease:'power1.in', onComplete: () => {
+      el.textContent = txt;
+      gsap.fromTo(el, { opacity:0, y:6 }, { opacity:1, y:0, duration:.2, ease:'power2.out' });
+    }});
+  } else el.textContent = txt;
+};
+
 /* ————————————————— film grain ————————————————— */
 (() => {
   const g = document.createElement('canvas'); g.width = g.height = 160;
@@ -870,7 +892,7 @@ if (!isTouch && CINEMA){
   $$('.record').forEach((rec,i) => {
     const head = rec.querySelector('.rec-head');
     head.addEventListener('mouseenter', () => {
-      $('#cur-label').textContent = head.getAttribute('aria-expanded') === 'true' ? 'close' : 'open';
+      setCurLabel(head.getAttribute('aria-expanded') === 'true' ? 'close' : 'open');
       if (head.getAttribute('aria-expanded') === 'true') return;
       if (plateArts[i]) plateCtx.drawImage(plateArts[i],0,0);
       if (!shown){ px = mouse.x+30; py = mouse.y - plate.offsetHeight/2; }
@@ -894,7 +916,7 @@ $$('.record').forEach(rec => {
   const body = rec.querySelector('.rec-body');
   head.addEventListener('click', () => {
     const open = head.getAttribute('aria-expanded') === 'true';
-    $('#cur-label').textContent = open ? 'open' : 'close';
+    setCurLabel(open ? 'open' : 'close');
     head.setAttribute('aria-expanded', String(!open));
     if (hasLibs){
       if (open) body.style.overflow = 'hidden';
@@ -920,7 +942,7 @@ $$('.record').forEach(rec => {
   });
 });
 
-/* magnetic pull on the primary actions */
+/* magnetic pull on the primary actions (desktop only — needs a real cursor) */
 if (!isTouch && hasLibs){
   $$('.chrome-cta, .bigcta, .mark, #float-cta').forEach(el => {
     const sx = gsap.quickTo(el, 'x', { duration:.55, ease:'power3.out' });
@@ -931,6 +953,21 @@ if (!isTouch && hasLibs){
       sy((e.clientY - (r.top + r.height/2)) * .22);
     });
     el.addEventListener('mouseleave', () => { sx(0); sy(0); });
+  });
+}
+
+/* press feedback on every button-like control (all devices) — timings match
+   the site's transitions-dev token pass: a quick, near-linear press-down
+   (--btn-press) and a springy release (--btn-release) */
+if (hasLibs && !prefersReduced){
+  $$('.chrome-cta, .bigcta, .mark, #float-cta').forEach(el => {
+    // magnetic elements already own their transform via GSAP's x/y quickTo —
+    // adding a separate scale quickTo composes into the same matrix rather
+    // than fighting it, which a plain CSS :active transform would
+    const ss = gsap.quickTo(el, 'scale', { duration:.12, ease:'cubic-bezier(.4,0,.2,1)' });
+    el.addEventListener('pointerdown', () => ss(.94));
+    el.addEventListener('pointerup', () => gsap.to(el, { scale:1, duration:.42, ease:'cubic-bezier(.34,1.45,.64,1)' }));
+    el.addEventListener('pointerleave', () => gsap.to(el, { scale:1, duration:.3, ease:'power2.out' }));
   });
 }
 
