@@ -94,19 +94,10 @@ body.touch a,body.touch button{cursor:pointer}
 #veil .veil-word{font-family:var(--clash);font-weight:300;font-size:10px;letter-spacing:.42em;text-transform:lowercase;color:var(--cream-40);opacity:0}
 
 /* ————— cursor ————— */
-#cur-dot{position:fixed;top:0;left:0;z-index:150;pointer-events:none;will-change:transform;width:23px;height:24px;margin:-6px 0 0 -2px;transform-origin:10% 26%;color:var(--chrome-c);transition:color .4s ease}
-#cur-dot svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 9px rgba(0,0,0,.4))}
-#cur-dot path{fill:currentColor}
-body.cur-cta #cur-dot{color:var(--red)}
-body.cur-cta #cur-dot svg{filter:drop-shadow(0 4px 16px rgba(229,53,43,.6))}
-body.cur-view #cur-dot{opacity:0}
+#cur-dot{position:fixed;top:0;left:0;z-index:150;pointer-events:none;will-change:transform;width:23px;height:24px;margin:-6px 0 0 -2px;transform-origin:10% 26%;mix-blend-mode:difference}
+#cur-dot svg{width:100%;height:100%;display:block}
+#cur-dot path{fill:#fff}
 body.touch #cur-dot{display:none}
-#cur-tag{position:fixed;top:0;left:0;z-index:150;pointer-events:none;padding:10px 18px;border-radius:99px;background:var(--cream);color:var(--ink);font-family:var(--clash);font-weight:400;font-size:9px;letter-spacing:.3em;text-transform:uppercase;opacity:0;will-change:transform,opacity;transition:opacity .3s ease}
-body.cur-view #cur-tag{opacity:1}
-body.touch #cur-tag{display:none}
-.cur-burst{position:fixed;z-index:149;pointer-events:none;border-radius:50%;border:1px solid var(--cream-40);width:30px;height:30px;margin:-15px 0 0 -15px}
-.cur-burst.cta{border-color:var(--red)}
-@media (prefers-reduced-motion:reduce){.cur-burst{display:none}}
 
 /* ————— fixed chrome ————— */
 #chrome{position:fixed;inset:0;z-index:100;pointer-events:none}
@@ -148,7 +139,7 @@ section{position:relative}
 /* ch0 — the dark */
 #ch0.hero-mask{background-color:rgba(245,241,232,var(--hero-bg,1))}
 #ch0 .pinwrap{position:relative}
-.hero-static{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(42vh,56vw);aspect-ratio:1;z-index:1;opacity:0}
+.hero-static{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(55vh,73vw);aspect-ratio:1;z-index:1;opacity:0}
 .hero-static svg{width:100%;height:100%;display:block}
 .hero-static path{fill:var(--paper-ink)}
 #hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none}
@@ -312,7 +303,6 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
 
 <!-- cursor -->
 <div id="cur-dot" aria-hidden="true"><svg viewBox="0 0 962 1008" xmlns="http://www.w3.org/2000/svg"><path d="M106.715 315.132C106.707 315.124 106.7 315.115 106.694 315.105C96.2298 296.95 104.213 275.255 121.019 266.69C125.782 264.173 131.274 262.718 137.271 262.716C137.277 262.716 137.283 262.717 137.288 262.719C137.293 262.722 137.299 262.724 137.305 262.724L856.938 262.727C865.866 262.918 871.324 272.609 866.859 280.343L832.325 340.157C825.18 352.533 811.975 360.157 797.684 360.157L306.864 360.155C306.859 360.155 306.853 360.153 306.848 360.15C306.843 360.148 306.836 360.147 306.831 360.147C300.834 360.149 295.342 361.604 290.579 364.121C273.773 372.686 265.79 394.381 276.254 412.536C276.26 412.546 276.267 412.555 276.275 412.563C276.283 412.571 276.29 412.58 276.296 412.59L521.855 837.907C529 850.283 529.001 865.531 521.855 877.907L487.082 938.135C485.248 941.312 482.284 943.182 479.118 943.748C474.489 944.752 469.338 942.968 466.546 938.364L106.736 315.159C106.73 315.149 106.723 315.14 106.715 315.132Z"/></svg></div>
-<div id="cur-tag" aria-hidden="true"><span id="cur-label">open</span></div>
 
 <!-- fixed chrome -->
 <div id="chrome">
@@ -559,20 +549,6 @@ const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const lerp = (a,b,t)=>a+(b-a)*t;
 
-/* small text-state swap on the cursor's open/close label, in the spirit of
-   transitions-dev's text-swap pattern — shared by the hover preview and
-   the click handler below so both get the same cross-fade */
-const setCurLabel = txt => {
-  const el = $('#cur-label');
-  if (!el || el.textContent === txt) return;
-  if (window.gsap && !document.documentElement.classList.contains('static') && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-    gsap.to(el, { opacity:0, y:-6, duration:.12, ease:'power1.in', onComplete: () => {
-      el.textContent = txt;
-      gsap.fromTo(el, { opacity:0, y:6 }, { opacity:1, y:0, duration:.2, ease:'power2.out' });
-    }});
-  } else el.textContent = txt;
-};
-
 /* ————————————————— film grain ————————————————— */
 (() => {
   const g = document.createElement('canvas'); g.width = g.height = 160;
@@ -621,29 +597,12 @@ if (CINEMA && window.Lenis){
 /* ————————————————— cursor ————————————————— */
 const mouse = { x: innerWidth/2, y: innerHeight/2, nx: 0, ny: 0 };
 if (!isTouch){
-  const dot = $('#cur-dot'), tag = $('#cur-tag');
-  let dx=mouse.x, dy=mouse.y, rx=mouse.x, ry=mouse.y, rot=0, scale=1, tagScale=.8;
+  const dot = $('#cur-dot');
+  let dx=mouse.x, dy=mouse.y, rot=0, scale=1;
   const scaleState = { v: 1 };
-  const tagScaleState = { v: .8 };
   const setScale = (target, dur, ease) => {
     if (hasLibs) gsap.to(scaleState, { v: target, duration: dur, ease, onUpdate: () => scale = scaleState.v });
     else scale = target;
-  };
-  const setTagScale = (target, dur, ease) => {
-    if (hasLibs) gsap.to(tagScaleState, { v: target, duration: dur, ease, onUpdate: () => tagScale = tagScaleState.v });
-    else tagScale = target;
-  };
-  // a brief ring blooms outward and fades where the cursor lands on
-  // something interactive — a moment of feedback, not a shape that
-  // trails you everywhere you go
-  const burst = (cta) => {
-    if (!hasLibs) return;
-    const el = document.createElement('div');
-    el.className = 'cur-burst' + (cta ? ' cta' : '');
-    el.style.left = dx + 'px'; el.style.top = dy + 'px';
-    document.body.appendChild(el);
-    gsap.fromTo(el, { opacity:.8, scale:.6 },
-      { opacity:0, scale:2, duration:.7, ease:'power2.out', onComplete:() => el.remove() });
   };
   addEventListener('mousemove', e => {
     mouse.x = e.clientX; mouse.y = e.clientY;
@@ -654,26 +613,23 @@ if (!isTouch){
   const loop = () => {
     const pdx = dx;
     dx = lerp(dx, mouse.x, .55); dy = lerp(dy, mouse.y, .55);
-    rx = lerp(rx, mouse.x, .16); ry = lerp(ry, mouse.y, .16);
     // the mark leans into the direction of travel, like a weathervane —
     // a small, steady tilt rather than a full spin
     const targetRot = Math.max(-14, Math.min(14, (dx - pdx) * 1.1));
     rot = lerp(rot, targetRot, .15);
     dot.style.transform = `translate3d(${dx}px,${dy}px,0) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
-    tag.style.transform = `translate3d(${rx + 22}px,${ry + 18}px,0) scale(${tagScale.toFixed(3)})`;
     requestAnimationFrame(loop);
   };
   loop();
   document.addEventListener('mouseover', e => {
     const cta = e.target.closest('.bigcta, .chrome-cta, #float-cta');
-    const view = e.target.closest('[data-view]');
     const hoverable = e.target.closest('a,button,[data-hover]');
-    if (view){ document.body.classList.add('cur-view'); setTagScale(1, .4, 'back.out(2)'); }
-    else if (cta){ document.body.classList.add('cur-cta'); setScale(1.4, .4, 'back.out(2)'); burst(true); }
-    else if (hoverable){ document.body.classList.add('cur-hover'); setScale(1.22, .35, 'back.out(2)'); burst(false); }
+    // the mark itself grows to say "interactive" — no separate badge or
+    // popup, difference-blend already keeps it legible on any background
+    if (cta){ document.body.classList.add('cur-cta'); setScale(1.65, .4, 'back.out(2)'); }
+    else if (hoverable){ document.body.classList.add('cur-hover'); setScale(1.32, .35, 'back.out(2)'); }
   });
   document.addEventListener('mouseout', e => {
-    if (e.target.closest('[data-view]')){ document.body.classList.remove('cur-view'); setTagScale(.8, .3, 'power2.out'); }
     if (e.target.closest('.bigcta, .chrome-cta, #float-cta')){ document.body.classList.remove('cur-cta'); setScale(1, .35, 'power2.out'); }
     else if (e.target.closest('a,button,[data-hover]')){ document.body.classList.remove('cur-hover'); setScale(1, .35, 'power2.out'); }
   });
@@ -925,13 +881,20 @@ function initHero(){
         float ripple = sin(distM*16.0 - uTime*2.0) * 0.028 * fall;
         vec2 dp = p + dir * ripple;
 
-        float half_h = 0.225 * uScale;
-        vec2 maskUV = (dp / half_h) * 0.5 + 0.5;
+        // pixelation — the window is built from a visible grid at rest, and
+        // resolves into much coarser blocks right where the cursor lands
+        float cellsFar = 140.0;
+        float cellsNear = 22.0;
+        float cells = mix(cellsFar, cellsNear, fall);
+        vec2 px = floor(dp * cells) / cells + (0.5 / cells);
+
+        float half_h = 0.38 * uScale;
+        vec2 maskUV = (px / half_h) * 0.5 + 0.5;
         float inBounds = step(0.0, maskUV.x) * step(maskUV.x, 1.0) * step(0.0, maskUV.y) * step(maskUV.y, 1.0);
         float a = texture2D(uMaskTex, maskUV).a * inBounds;
 
-        float n1 = fbm(dp*2.6 + vec2(0.0, uTime*0.045));
-        float n2 = fbm(dp*5.5 - vec2(uTime*0.03, 0.0));
+        float n1 = fbm(px*2.6 + vec2(0.0, uTime*0.045));
+        float n2 = fbm(px*5.5 - vec2(uTime*0.03, 0.0));
         vec3 content = mix(uInk, uRed, smoothstep(0.58, 0.92, n2));
         content *= 0.68 + 0.34*n1;
 
@@ -1048,7 +1011,6 @@ if (!isTouch && CINEMA){
   $$('.record').forEach((rec,i) => {
     const head = rec.querySelector('.rec-head');
     head.addEventListener('mouseenter', () => {
-      setCurLabel(head.getAttribute('aria-expanded') === 'true' ? 'close' : 'open');
       if (head.getAttribute('aria-expanded') === 'true') return;
       if (plateArts[i]) plateCtx.drawImage(plateArts[i],0,0);
       if (!shown){ px = mouse.x+30; py = mouse.y - plate.offsetHeight/2; }
@@ -1072,7 +1034,6 @@ $$('.record').forEach(rec => {
   const body = rec.querySelector('.rec-body');
   head.addEventListener('click', () => {
     const open = head.getAttribute('aria-expanded') === 'true';
-    setCurLabel(open ? 'open' : 'close');
     head.setAttribute('aria-expanded', String(!open));
     if (hasLibs){
       if (open) body.style.overflow = 'hidden';
@@ -1213,13 +1174,14 @@ function buildFilm(){
     onUpdate: st => { railFill.style.transform = `scaleY(${st.progress})`; } });
 
   /* 00 · the mark, as a window — grows until it swallows the white page,
-     handing off to the dark archive beneath it */
+     then dissolves well before chapter 1 arrives. It does not linger. */
   const ch0El = $('#ch0');
+  const heroCanvasEl = $('#hero-canvas');
   ScrollTrigger.create({
     trigger:'#ch0', start:'top top', end:'+=130%', pin:true, scrub:true,
     onUpdate: st => {
       const p = st.progress;
-      heroU.scale = 1 + p * 6.4;
+      heroU.scale = 1 + p * 4.6;
       const bg = Math.max(0, 1 - p * 1.35);
       if (ch0El) ch0El.style.setProperty('--hero-bg', bg);
       document.body.classList.toggle('chrome-light', bg > 0.5);
@@ -1227,7 +1189,21 @@ function buildFilm(){
       film.wobble = wobbleFor(0);
       // the caption steps aside early — it's read before the growth begins
       gsap.set('.hero-caption', { opacity: Math.max(0, 1 - p * 6) });
-    }
+      // the window dissolves in the middle third of the scroll, well before
+      // the pin releases, so chapter 1 always arrives into empty dark —
+      // wide margin on purpose, this is the one transition that must never
+      // visibly overlap the next chapter
+      heroU.reveal = p < 0.42 ? 1 : Math.max(0, 1 - (p - 0.42) / 0.4);
+      if (heroCanvasEl) heroCanvasEl.style.opacity = p >= 0.98 ? 0 : 1;
+    },
+    onLeaveBack: () => { if (heroCanvasEl) heroCanvasEl.style.opacity = 1; }
+  });
+  // hard safety net: once you've genuinely left the hero, the canvas is
+  // switched off entirely rather than trusting opacity/reveal math alone
+  if (heroCanvasEl) ScrollTrigger.create({
+    trigger:'#ch0', start:'top top', end:'bottom top',
+    onLeave: () => heroCanvasEl.style.visibility = 'hidden',
+    onEnterBack: () => heroCanvasEl.style.visibility = 'visible'
   });
 
   /* 01 · the trace — seen scatters, remembered resolves, dust becomes the mark */
