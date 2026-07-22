@@ -142,9 +142,13 @@ section{position:relative}
 .hero-static{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(55vh,73vw);aspect-ratio:1;z-index:1;opacity:0}
 .hero-static svg{width:100%;height:100%;display:block}
 .hero-static path{fill:var(--paper-ink)}
-#hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none}
-.hero-caption{position:absolute;left:50%;bottom:13vh;transform:translateX(-50%);z-index:2;opacity:0;text-align:center;padding:0 var(--pad)}
-.hero-tag{font-size:clamp(11px,1vw,13px);font-weight:400;letter-spacing:.42em;color:var(--paper-ink);text-transform:lowercase;opacity:.82}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:pan-y}
+.hero-heading{position:absolute;left:50%;top:11vh;transform:translateX(-50%);z-index:2;opacity:0;text-align:center;padding:0 var(--pad)}
+.hero-heading h1{font-family:var(--kuevy);font-weight:400;font-size:clamp(30px,5.4vw,72px);line-height:1;letter-spacing:-.01em;color:var(--paper-ink);text-transform:lowercase}
+.hero-heading .rd{color:var(--red)}
+.hero-caption{position:absolute;left:50%;bottom:12vh;transform:translateX(-50%);z-index:2;opacity:0;text-align:center;padding:0 var(--pad)}
+.hero-sub{font-family:var(--kuevy);font-weight:400;font-size:clamp(15px,1.6vw,20px);letter-spacing:-.005em;color:var(--paper-ink);text-transform:lowercase;margin-bottom:14px;opacity:.92}
+.hero-tag{font-size:clamp(11px,1vw,13px);font-weight:400;letter-spacing:.42em;color:var(--paper-ink);text-transform:lowercase;opacity:.7}
 .hero-tag .dot{color:var(--red)}
 
 /* ch1 — the trace */
@@ -284,6 +288,9 @@ html.static #ch0.hero-mask{--hero-bg:0}
 html.static .hero-static{display:none}
 html.static .hero-caption{opacity:1!important}
 html.static .hero-tag{color:var(--cream-70)}
+html.static .hero-sub{color:var(--cream)}
+html.static .hero-heading{opacity:1!important}
+html.static .hero-heading h1{color:var(--cream)}
 a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid var(--red);outline-offset:6px}
 </style>
 </head>
@@ -333,11 +340,15 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
   <!-- 00 · the dark -->
   <section id="ch0" data-chapter="0" class="hero-mask">
     <div class="pinwrap">
+      <div class="hero-heading">
+        <h1 data-rest>come closer<span class="rd">.</span></h1>
+      </div>
       <div class="hero-static" aria-hidden="true">
         <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M15.036 20.5002L3.52176 0.556814C3.3229 0.212306 2.95543 0 2.55771 0L1.11305 0C0.498547 0 0 0.498556 0 1.11307L0 30.8869C0 31.5014 0.498547 32 1.11305 32H13.37C13.7677 32 14.1352 31.7877 14.3341 31.4432L20.4421 20.8637C20.8706 20.1215 21.9417 20.1215 22.3702 20.8637L28.4782 31.4432C28.6771 31.7877 29.0446 32 29.4423 32H30.887C31.5015 32 32 31.5014 32 30.8869V1.11307C32 0.498556 31.5015 0 30.887 0L29.4423 0C29.0446 0 28.6771 0.212306 28.4782 0.556814L16.964 20.5007C16.5355 21.243 15.4645 21.243 15.036 20.5007V20.5002Z"/></svg>
       </div>
       <canvas id="hero-canvas" aria-hidden="true"></canvas>
       <div class="hero-caption">
+        <p class="hero-sub" data-rest>domen markeljc</p>
         <p class="hero-tag" data-rest>visual identities <span class="dot">.</span> websites <span class="dot">.</span> memory systems</p>
       </div>
     </div>
@@ -804,7 +815,7 @@ function buildHeroMaskTexture(){
   const ctx = cv.getContext('2d');
   const p = new Path2D('M15.036 20.5002L3.52176 0.556814C3.3229 0.212306 2.95543 0 2.55771 0L1.11305 0C0.498547 0 0 0.498556 0 1.11307L0 30.8869C0 31.5014 0.498547 32 1.11305 32H13.37C13.7677 32 14.1352 31.7877 14.3341 31.4432L20.4421 20.8637C20.8706 20.1215 21.9417 20.1215 22.3702 20.8637L28.4782 31.4432C28.6771 31.7877 29.0446 32 29.4423 32H30.887C31.5015 32 32 31.5014 32 30.8869V1.11307C32 0.498556 31.5015 0 30.887 0L29.4423 0C29.0446 0 28.6771 0.212306 28.4782 0.556814L16.964 20.5007C16.5355 21.243 15.4645 21.243 15.036 20.5007V20.5002Z');
   ctx.translate(size*0.06, size*0.06); ctx.scale(size*0.88/32, size*0.88/32);
-  ctx.fillStyle = '#fff'; ctx.fill(p);
+  ctx.fillStyle = '#fff'; ctx.filter = 'blur(5px)'; ctx.fill(p);
   const tex = new THREE.CanvasTexture(cv);
   tex.minFilter = THREE.LinearFilter; tex.magFilter = THREE.LinearFilter;
   tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
@@ -817,8 +828,8 @@ function initHero(){
   const section = $('#ch0');
   if (!canvas || !section) return;
 
-  heroRenderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, powerPreference:'high-performance' });
-  heroRenderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  heroRenderer = new THREE.WebGLRenderer({ canvas, antialias:!isTouch, alpha:true, powerPreference:'high-performance' });
+  heroRenderer.setPixelRatio(isTouch ? Math.min(devicePixelRatio, 1.25) : Math.min(devicePixelRatio, 1.75));
   const size0 = section.getBoundingClientRect();
   heroRenderer.setSize(size0.width || innerWidth, size0.height || innerHeight, false);
 
@@ -872,33 +883,48 @@ function initHero(){
       void main(){
         vec2 res = uResolution;
         float aspect = res.x / res.y;
+        // on a narrow/portrait screen the horizontal space in this normalized
+        // unit system shrinks with aspect, so a fixed world-size mask would
+        // overflow the width — compensate by shrinking the mask on narrow
+        // viewports so it never exceeds a comfortable fraction of the screen
+        float aspectComp = clamp(aspect, 0.55, 1.3) / 1.3;
+
         vec2 p = (vUv - 0.5) * vec2(aspect, 1.0);
         vec2 m = (uMouse - 0.5) * vec2(aspect, 1.0);
 
         float distM = length(p - m);
-        float fall = smoothstep(0.42, 0.0, distM);
+        float fall = smoothstep(0.3, 0.0, distM);
         vec2 dir = (p - m) / (distM + 0.0001);
-        float ripple = sin(distM*16.0 - uTime*2.0) * 0.028 * fall;
+        float ripple = sin(distM*16.0 - uTime*2.0) * 0.013 * fall;
         vec2 dp = p + dir * ripple;
 
-        // pixelation — the window is built from a visible grid at rest, and
-        // resolves into much coarser blocks right where the cursor lands
-        float cellsFar = 140.0;
-        float cellsNear = 22.0;
-        float cells = mix(cellsFar, cellsNear, fall);
+        // pixelation and motion are both dormant at rest — the window only
+        // resolves into blocks and starts drifting once you reach it
+        float cells = mix(100000.0, 34.0, fall);
         vec2 px = floor(dp * cells) / cells + (0.5 / cells);
+        float motion = mix(0.12, 1.0, fall);
 
-        float half_h = 0.38 * uScale;
+        float half_h = 0.361 * uScale * aspectComp;
         vec2 maskUV = (px / half_h) * 0.5 + 0.5;
         float inBounds = step(0.0, maskUV.x) * step(maskUV.x, 1.0) * step(0.0, maskUV.y) * step(maskUV.y, 1.0);
-        float a = texture2D(uMaskTex, maskUV).a * inBounds;
+        float aRaw = texture2D(uMaskTex, maskUV).a * inBounds;
 
-        float n1 = fbm(px*2.6 + vec2(0.0, uTime*0.045));
-        float n2 = fbm(px*5.5 - vec2(uTime*0.03, 0.0));
+        // soft glowing edge — the mask texture is pre-blurred on the canvas,
+        // so its alpha already carries a wide gradient; split it into a
+        // solid core and a luminous rim instead of one hard cutoff
+        float aCore = smoothstep(0.42, 0.62, aRaw);
+        float aGlow = smoothstep(0.02, 0.42, aRaw) - aCore;
+        vec3 glowTint = mix(uRed, vec3(1.0, 0.93, 0.82), 0.45);
+
+        float n1 = fbm(px*2.6 + vec2(0.0, uTime*0.045*motion));
+        float n2 = fbm(px*5.5 - vec2(uTime*0.03*motion, 0.0));
         vec3 content = mix(uInk, uRed, smoothstep(0.58, 0.92, n2));
         content *= 0.68 + 0.34*n1;
 
-        gl_FragColor = vec4(content, a * uReveal);
+        vec3 finalColor = mix(glowTint, content, aCore);
+        float finalAlpha = (aCore + aGlow*0.55) * uReveal;
+
+        gl_FragColor = vec4(finalColor, finalAlpha);
       }`
   });
 
@@ -1187,7 +1213,9 @@ function buildFilm(){
       document.body.classList.toggle('chrome-light', bg > 0.5);
       film.opacity = Math.min(.8, p * 1.25);
       film.wobble = wobbleFor(0);
-      // the caption steps aside early — it's read before the growth begins
+      // the heading and caption step aside early — they're read before the
+      // growth begins
+      gsap.set('.hero-heading', { opacity: Math.max(0, 1 - p * 6) });
       gsap.set('.hero-caption', { opacity: Math.max(0, 1 - p * 6) });
       // the window dissolves in the middle third of the scroll, well before
       // the pin releases, so chapter 1 always arrives into empty dark —
@@ -1389,6 +1417,7 @@ function openVeil(){
     .set(veil, { display:'none' })
     /* the mark opens its eyes — the window comes alive before anything else */
     .to(heroU, { reveal:1, duration:1.6, ease:'power1.inOut' }, '-=1.1')
+    .to('.hero-heading', { opacity:1, duration:1.1 }, '-=.9')
     .to('.hero-caption', { opacity:1, duration:1.1 }, '-=.9')
     .to('.mark', { opacity:1, duration:1 }, '-=.9')
     .to('.chrome-cta', { opacity:1, duration:1 }, '-=.85')
