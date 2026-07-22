@@ -1040,7 +1040,6 @@ function initHero(){
         }
 
         vec2 podiumUv = uvMouseTrail;
-        podiumUv.y = 1.0 - podiumUv.y;
 
         if (resolutionRatio < 1.0) {
           podiumUv.y += (1.0 - uScrollProgress) * (1.0 - resolutionRatio) * 0.3;
