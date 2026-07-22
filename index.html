@@ -80,7 +80,7 @@ body.touch a,body.touch button{cursor:pointer}
 
 /* ————— webgl stage & atmosphere ————— */
 #stage{position:fixed;inset:0;z-index:0;pointer-events:none}
-#stage canvas{display:block;width:100%;height:100%}
+#stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
 #grain{position:fixed;inset:-100px;z-index:60;pointer-events:none;opacity:.07;mix-blend-mode:overlay}
 #vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
   background:radial-gradient(ellipse 120% 90% at 50% 45%,transparent 55%,rgba(5,4,3,.55) 100%)}
@@ -223,11 +223,12 @@ section{position:relative}
 #ch3 .about .ln{display:block;overflow:hidden}
 #ch3 .about .ln>span{display:block;transform:translateY(105%)}
 
-/* ch4 — the fade */
-#ch4 .fadewrap{text-align:center;padding:0 var(--pad)}
-#ch4 .fades{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(40px,7.4vw,120px);line-height:1.05}
-#ch4 .fades .ch{display:inline-block;will-change:transform,opacity,filter}
-#ch4 .stays{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(40px,7.4vw,120px);line-height:1.05;opacity:0;filter:blur(14px);margin-top:.1em}
+/* ch4 — the fade — small, contained connective beat (not a second climax) */
+#ch4{padding:16vh 0}
+#ch4 .fadewrap{text-align:center;padding:0 var(--pad);max-width:640px;margin:0 auto}
+#ch4 .fades{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(22px,3vw,38px);line-height:1.2}
+#ch4 .fades .ch{display:inline-block;will-change:transform,opacity}
+#ch4 .stays{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(22px,3vw,38px);line-height:1.2;opacity:0;filter:blur(8px);margin-top:.35em}
 #ch4 .stays .stop{color:var(--red);display:inline-block}
 
 /* ch5 — the invitation */
@@ -255,7 +256,11 @@ section{position:relative}
 #ch5 .bigcta .arrow{width:26px;height:1px;background:currentColor;position:relative;z-index:1;transition:width .6s var(--ease-out)}
 #ch5 .bigcta:hover .arrow{width:40px}
 #ch5 .bigcta .arrow::after{content:"";position:absolute;right:0;top:-3px;width:7px;height:7px;border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg)}
+#ch5 .avail{margin-top:2.6vh;font-size:11px;font-weight:400;letter-spacing:.2em;text-transform:lowercase;color:var(--cream-55);display:flex;align-items:center;justify-content:center;gap:10px}
+#ch5 .avail::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--red);flex:none;animation:pulse-dot 2.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){#ch5 .avail::before{animation:none}}
 footer{margin-top:22vh;padding:0 var(--pad) 40px}
+footer .ftag{font-size:11px;font-weight:400;letter-spacing:.26em;text-transform:lowercase;color:var(--cream-40);margin-bottom:22px}
 footer .frule{height:1px;background:var(--cream-10);margin-bottom:34px}
 footer .frow{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:11px;font-weight:400;letter-spacing:.26em;text-transform:lowercase;color:var(--cream-55)}
 footer a{color:var(--cream)}
@@ -265,6 +270,9 @@ footer .fmark:hover path{fill:var(--red)}
 footer a{position:relative;padding-bottom:4px}
 footer a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--cream-40);transform:scaleX(0);transform-origin:right;transition:transform .5s var(--ease-io)}
 footer a:hover::after{transform:scaleX(1);transform-origin:left}
+footer .copy-email{appearance:none;background:none;border:1px solid var(--cream-24);border-radius:99px;color:var(--cream-55);font:inherit;font-size:10px;letter-spacing:.2em;padding:6px 14px;margin-left:2px;transition:border-color .4s,color .4s,background-color .4s;display:inline-block}
+footer .copy-email:hover{border-color:var(--cream-40);color:var(--cream)}
+footer .copy-email.is-copied{border-color:var(--red);color:var(--red)}
 
 /* ————— responsive ————— */
 @media (max-width:860px){
@@ -349,7 +357,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
       <canvas id="hero-canvas" aria-hidden="true"></canvas>
       <div class="hero-caption">
         <p class="hero-sub" data-rest>domen markeljc</p>
-        <p class="hero-tag" data-rest>visual identities <span class="dot">.</span> websites <span class="dot">.</span> memory systems</p>
+        <p class="hero-tag" data-rest>identity, web, motion — for the second look, not the first glance</p>
       </div>
     </div>
   </section>
@@ -358,8 +366,8 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
   <section id="ch1" data-chapter="1">
     <div class="pinwrap">
       <div class="stack">
-        <p class="line seen" id="seen" data-rest>some brands are seen.</p>
-        <p class="line rem" id="rem" data-rest>others are remembered<span class="stop">.</span></p>
+        <p class="line seen" id="seen" data-rest>most things get a glance.</p>
+        <p class="line rem" id="rem" data-rest>the good ones get looked at twice<span class="stop">.</span></p>
         <div class="markline" id="markline" data-rest><i id="markline-fill"></i></div>
       </div>
     </div>
@@ -372,7 +380,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
       <h2><span class="word"><span>the</span></span> <span class="word"><span>work</span></span> <span class="word"><span>remains</span></span></h2>
       <span class="rule"></span>
     </div>
-    <p class="intro" data-io>Every mark leaves a trace. This is the archive — <b>five projects, one visual language</b> — identities, print and digital worlds built to outlive the moment they were seen in.</p>
+    <p class="intro" data-io>a glance is free. <b>a second look has to be earned.</b> here's what earned it.</p>
 
     <div class="records" id="records">
 
@@ -380,12 +388,12 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
         <button class="rec-head" data-view aria-expanded="false">
           <span class="rec-num">01</span>
           <h3 class="rec-title">gorjup</h3>
-          <span class="rec-meta">identity &amp; packaging<br>wine · goriška brda · 2025</span>
+          <span class="rec-meta">identity &amp; packaging<br>wine · 2025</span>
         </button>
         <div class="rec-body"><div class="rec-body-in">
           <div class="rec-info">
-            <div class="rec-copy"><p>Visual identity and packaging for a niche wine label from Goriška Brda. <b>Logotype, leaf illustrations and numbered labels</b> — a mark pressed into paper the way a vintage is pressed into memory.</p></div>
-            <div class="rec-tags"><span>logotype</span><span>illustration</span><span>labels</span><span>packaging</span></div>
+            <div class="rec-copy"><p>a wine label built to survive being picked up. the shadow of a leaf, cast on stone, became the illustration. <b>the illustration became a mark you can find with your thumb</b> before you've read a word.</p></div>
+            <div class="rec-tags"><span>logotype</span><span>illustration</span><span>label design</span><span>packaging design</span></div>
           </div>
           <div class="rec-gallery">
             <figure class="gal wide"><span class="frame"><img src="assets/img/gorjup-01.jpg" alt="Gorjup wine bottles with green labels standing on weathered wood" loading="lazy"></span><figcaption>the vintage — rebula on the shelf</figcaption></figure>
@@ -400,12 +408,12 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
         <button class="rec-head" data-view aria-expanded="false">
           <span class="rec-num">02</span>
           <h3 class="rec-title">kosovel</h3>
-          <span class="rec-meta">editorial design<br>booklet · print · 2025</span>
+          <span class="rec-meta">editorial design<br>booklet · 2025</span>
         </button>
         <div class="rec-body"><div class="rec-body-in">
           <div class="rec-info">
-            <div class="rec-copy"><p>A booklet marking <b>100 years since the passing of Srečko Kosovel</b> — his constructivist kons poems set back into motion through typography, colour and rhythm.</p></div>
-            <div class="rec-tags"><span>editorial</span><span>typography</span><span>print</span></div>
+            <div class="rec-copy"><p>a hundred years is long enough for a poet to be forgotten. this booklet was built so srečko kosovel's constructivist work wouldn't be — <b>his kons poems set back into motion through typography built to be read twice:</b> once for the words, once for the shape they make.</p></div>
+            <div class="rec-tags"><span>editorial design</span><span>typography</span><span>print design</span></div>
           </div>
           <div class="rec-gallery">
             <figure class="gal wide"><span class="frame"><img src="assets/img/kosovel-01.jpg" alt="Open red spread of the Kosovel booklet with archive material" loading="lazy"></span><figcaption>the archive spread</figcaption></figure>
@@ -420,12 +428,12 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
         <button class="rec-head" data-view aria-expanded="false">
           <span class="rec-num">03</span>
           <h3 class="rec-title">santera</h3>
-          <span class="rec-meta">identity &amp; packaging<br>aperitif · mediterranean · 2026</span>
+          <span class="rec-meta">identity &amp; packaging<br>aperitif · 2026</span>
         </button>
         <div class="rec-body"><div class="rec-body-in">
           <div class="rec-info">
-            <div class="rec-copy"><p>Identity and packaging for a niche Mediterranean botanical aperitif. <b>An arch, a sun-warmed palette and a label built for slow evenings</b> — smooth ritual, not the rush.</p></div>
-            <div class="rec-tags"><span>identity</span><span>label</span><span>packaging</span><span>art direction</span></div>
+            <div class="rec-copy"><p>not a drink you finish quickly. an arch on the label, a sun-warmed palette, <b>a bottle shaped for the second pour more than the first.</b> built for the part of the evening nobody's in a hurry to end.</p></div>
+            <div class="rec-tags"><span>brand identity</span><span>label design</span><span>packaging design</span></div>
           </div>
           <div class="rec-gallery">
             <figure class="gal wide"><span class="frame"><img src="assets/img/santera-01.jpg" alt="Frosted Santera bottle beside a filled glass, olive branches behind" loading="lazy"></span><figcaption>the ritual — bottle and pour</figcaption></figure>
@@ -438,12 +446,12 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
         <button class="rec-head" data-view aria-expanded="false">
           <span class="rec-num">04</span>
           <h3 class="rec-title">ronki</h3>
-          <span class="rec-meta">identity &amp; packaging<br>olive oil · vipava valley · 2026</span>
+          <span class="rec-meta">identity &amp; packaging<br>olive oil · 2026</span>
         </button>
         <div class="rec-body"><div class="rec-body-in">
           <div class="rec-info">
-            <div class="rec-copy"><p>Identity, story and packaging for a family olive grove in the Vipava valley. <b>Two olives form a gaze</b> — generations of careful selection pressed into a single mark, treated like a premium wine label rather than a local etiquette.</p></div>
-            <div class="rec-tags"><span>identity</span><span>story</span><span>packaging</span><span>print</span></div>
+            <div class="rec-copy"><p>two olives, drawn close enough together that they start to look like a face watching you back. that's the whole brief in one mark — <b>generations of careful selection, pressed into something you'd notice</b> on a shelf full of oil that all looks the same at a glance.</p></div>
+            <div class="rec-tags"><span>brand identity</span><span>packaging design</span><span>logo design</span></div>
           </div>
           <div class="rec-gallery">
             <figure class="gal"><span class="frame"><img src="assets/img/ronki-01.jpg" alt="Two dark Ronki olive oil bottles with acid green labels" loading="lazy"></span><figcaption>extra deviško, bottled</figcaption></figure>
@@ -458,12 +466,12 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
         <button class="rec-head" data-view aria-expanded="false">
           <span class="rec-num">05</span>
           <h3 class="rec-title">2fit2fail</h3>
-          <span class="rec-meta">identity &amp; website<br>personal training · digital · 2026</span>
+          <span class="rec-meta">identity &amp; website<br>personal training · 2026</span>
         </button>
         <div class="rec-body"><div class="rec-body-in">
           <div class="rec-info">
-            <div class="rec-copy"><p>Identity and website for personal trainer Žan Hočevar Peganc. <b>A training system translated into a digital one</b> — sharp type, acid accents, motion with intent. Built to move.</p></div>
-            <div class="rec-tags"><span>identity</span><span>website</span><span>motion</span><span>development</span></div>
+            <div class="rec-copy"><p>a training system doesn't need to look loud to feel serious. this one does anyway, on purpose — <b>sharp type, acid accents, a site built with the same discipline</b> the training plans are. built to move, not just to load.</p></div>
+            <div class="rec-tags"><span>brand identity</span><span>website design</span><span>web development</span><span>motion design</span></div>
             <a class="rec-link" href="https://zhp.vercel.app/" target="_blank" rel="noopener" data-hover>visit the live site</a>
           </div>
           <div class="rec-gallery">
@@ -490,41 +498,41 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
         <img id="portrait-img" src="assets/img/domen-portrait.png" alt="Domen Markeljc, portrait" onerror="this.closest('figure').style.display='none'">
       </figure>
       <div>
-        <p class="who" data-io>the designer</p>
+        <p class="who" data-io>the second look, from the other side</p>
         <h3 class="name" data-io>domen markeljc</h3>
         <div class="about" id="about">
-          <p>I design identities, websites and digital brand experiences for brands with ambition. <b>Clear enough to understand. Refined to feel premium. Distinct to be remembered.</b></p>
-          <p>My work blends strategy, typography, image, motion and interaction — not as separate pieces, but as one visual system with a clear emotional direction.</p>
-          <p>I do not create brands that simply look good for a moment. I create visual worlds that feel <b>intentional, recognizable and remembered<span class="rd">.</span></b></p>
+          <p>i don't design for the first glance. anyone can make something that gets noticed once. <b>i design for the version of a brand that gets looked at twice</b> — and then gets remembered without trying to be.</p>
+          <p>that means strategy, typography, image, motion and interaction stop being separate jobs. <b>they become one decision, made once, held all the way through</b> — so nothing about a brand feels like it was finished by a different person than the one who started it.</p>
+          <p>i'm not interested in work that looks good for a week. i'm interested in <b>the mark someone draws from memory a year later, without meaning to<span class="rd">.</span></b></p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 04 · the fade -->
+  <!-- 04 · the fade — small, contained, no shader -->
   <section id="ch4" data-chapter="4">
-    <div class="pinwrap">
-      <div class="fadewrap">
-        <p class="fades" id="fades" data-rest>the image fades</p>
-        <p class="stays" id="stays" data-rest>the work remains<span class="stop">.</span></p>
-      </div>
+    <div class="fadewrap">
+      <p class="fades" id="fades" data-rest>the first glance fades.</p>
+      <p class="stays" id="stays" data-rest>the second look stays<span class="stop">.</span></p>
     </div>
   </section>
 
   <!-- 05 · the invitation -->
   <section id="ch5" data-chapter="5">
     <div class="inv">
-      <p class="ready" data-io>ready when you are</p>
+      <p class="ready" data-io>still here? good.</p>
       <h2 id="inv-title"><span class="word"><span>le<span class="tk">t</span></span></span> <span class="word"><span>us</span></span> <span class="word"><span>make</span></span> <span class="word"><span>your</span></span> <span class="word"><span>br<span class="tk">a</span>nd</span></span><br><span class="word accent"><span>remember<span class="tk">ed</span>.</span></span></h2>
-      <p class="invsub" data-io>for identities, websites and digital experiences<br>with clarity, atmosphere and intent.</p>
+      <p class="invsub" data-io>come closer. let's build something worth a second look.</p>
       <a class="bigcta" href="mailto:info@domenmarkeljc.com" data-hover data-io><span>start a project</span><span class="arrow"></span></a>
+      <p class="avail" data-io>open for new projects · replies within 2 days</p>
     </div>
     <footer>
-      <div class="frule" data-io></div>
-      <div class="frow" data-io>
+      <p class="ftag" data-io-end>identity · web · motion, made one decision at a time</p>
+      <div class="frule" data-io-end></div>
+      <div class="frow" data-io-end>
         <svg class="fmark" viewBox="0 0 32 32" aria-hidden="true"><path d="M15.036 20.5002L3.52176 0.556814C3.3229 0.212306 2.95543 0 2.55771 0L1.11305 0C0.498547 0 0 0.498556 0 1.11307L0 30.8869C0 31.5014 0.498547 32 1.11305 32H13.37C13.7677 32 14.1352 31.7877 14.3341 31.4432L20.4421 20.8637C20.8706 20.1215 21.9417 20.1215 22.3702 20.8637L28.4782 31.4432C28.6771 31.7877 29.0446 32 29.4423 32H30.887C31.5015 32 32 31.5014 32 30.8869V1.11307C32 0.498556 31.5015 0 30.887 0L29.4423 0C29.0446 0 28.6771 0.212306 28.4782 0.556814L16.964 20.5007C16.5355 21.243 15.4645 21.243 15.036 20.5007V20.5002Z"/></svg>
-        <span>© 2026 domen markeljc — slovenia · <span id="clock">--:--</span> cet</span>
-        <span><a href="https://www.instagram.com/domen_markeljc/" data-hover target="_blank" rel="noopener">instagram</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="https://www.facebook.com/domen.markeljc.98" data-hover target="_blank" rel="noopener">facebook</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="https://x.com/DMarkeljc" data-hover target="_blank" rel="noopener">x</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="mailto:info@domenmarkeljc.com" data-hover>email</a></span>
+        <span>© 2026 domen markeljc · <span id="clock">--:--</span> cet</span>
+        <span><a href="https://www.instagram.com/domen_markeljc/" data-hover target="_blank" rel="noopener">instagram</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="https://www.facebook.com/domen.markeljc.98" data-hover target="_blank" rel="noopener">facebook</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="https://x.com/DMarkeljc" data-hover target="_blank" rel="noopener">x</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="mailto:info@domenmarkeljc.com" data-hover>email</a>&nbsp;&nbsp;<button type="button" class="copy-email" id="copy-email" data-hover data-email="info@domenmarkeljc.com" aria-label="copy email address to clipboard">copy email</button></span>
       </div>
     </footer>
   </section>
@@ -559,6 +567,8 @@ if (!CINEMA) document.documentElement.classList.add('static');
 const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const lerp = (a,b,t)=>a+(b-a)*t;
+const clamp01 = t => Math.max(0, Math.min(1, t));
+const easeInOutCubic = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
 
 /* ————————————————— film grain ————————————————— */
 (() => {
@@ -814,7 +824,7 @@ if (GL) initThree();
    fill color is ours. The pinned-chapter zoom/dissolve on scroll is this
    site's own addition (uReveal), grafted on to keep the existing scroll
    choreography working with the new shader. */
-const heroU = { scale: 1, reveal: 0, scrollP: 0, scrollV: 0 };
+const heroU = { reveal: 0, scrollP: 0, scrollV: 0, scrollZ: 0 };
 const heroShape = { shapeReveal: 0, pulseReveal: 0 };
 let heroRenderer = null, heroUniforms = null, heroTouch = null;
 
@@ -1105,7 +1115,7 @@ function initHero(){
     heroUniforms.uShapeReveal.value = heroShape.shapeReveal;
     heroUniforms.uPulseReveal.value = heroShape.pulseReveal;
     heroUniforms.uScrollProgress.value = heroU.scrollP;
-    heroUniforms.uScrollZposition.value = heroU.scrollP;
+    heroUniforms.uScrollZposition.value = heroU.scrollZ;
     heroUniforms.uScrollVelocity.value = heroU.scrollV;
     heroUniforms.uReveal.value = heroU.reveal;
 
@@ -1307,6 +1317,38 @@ if (clockEl){
   tickClock(); setInterval(tickClock, 15000);
 }
 
+/* copy the email straight to the clipboard — no mail client detour */
+{
+  const copyBtn = $('#copy-email');
+  if (copyBtn){
+    const label = copyBtn.textContent;
+    let revertTimer = null;
+    copyBtn.addEventListener('click', async () => {
+      const email = copyBtn.dataset.email;
+      try {
+        if (navigator.clipboard) await navigator.clipboard.writeText(email);
+        else {
+          // clipboard API unavailable (non-secure context, old browser) —
+          // fall back to a hidden, selected textarea and execCommand
+          const ta = document.createElement('textarea');
+          ta.value = email; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); ta.remove();
+        }
+        copyBtn.textContent = 'copied';
+        copyBtn.classList.add('is-copied');
+      } catch (e) {
+        copyBtn.textContent = email;
+      }
+      clearTimeout(revertTimer);
+      revertTimer = setTimeout(() => {
+        copyBtn.textContent = label;
+        copyBtn.classList.remove('is-copied');
+      }, 1600);
+    });
+  }
+}
+
 /* the film has chapters — arrow keys step between them, the way a director's
    scrubber would, rather than fighting the pinned scroll pixel by pixel */
 {
@@ -1369,10 +1411,30 @@ function buildFilm(){
   ScrollTrigger.create({ trigger:'#ch5', start:'top 75%',
     onEnter: () => setFloatCta(false), onLeaveBack: () => setFloatCta(true) });
 
-  /* the rail — a thin, precious line marking passage through the film */
+  /* the rail — a thin, precious line marking passage through the film.
+     also carries the fix for the fixed "scroll to remember" hint: it sits
+     bottom-right for the whole film, but the footer's own bottom-right
+     content (email, copy-email button) lands in that exact same corner
+     once you actually reach the end, and #chrome's children all take
+     pointer events — so the hint was silently eating every click meant for
+     the copy button underneath it. An onEnter/onLeaveBack trigger on the
+     footer looked right but proved unreliable this close to the very
+     bottom of the page: a late ScrollTrigger.refresh() (fired after a
+     lazy-loaded image resolves) can silently snap progress to 1 without
+     ever calling onEnter. This piggybacks on the rail's own onUpdate
+     instead — already proven reliable across this whole file — so the
+     hint is corrected continuously from live progress rather than a
+     one-shot event that can be skipped. */
   const railFill = $('#rail-fill');
+  const hintEl = $('#hint');
+  let hintForcedHidden = false;
   if (railFill) ScrollTrigger.create({ trigger:'main', start:'top top', end:'bottom bottom', scrub:true,
-    onUpdate: st => { railFill.style.transform = `scaleY(${st.progress})`; } });
+    onUpdate: st => {
+      railFill.style.transform = `scaleY(${st.progress})`;
+      if (!hintEl) return;
+      if (st.progress > 0.985 && !hintForcedHidden){ hintForcedHidden = true; gsap.to(hintEl, { opacity:0, duration:.4, ease:'power2.out' }); }
+      else if (st.progress <= 0.985 && hintForcedHidden){ hintForcedHidden = false; gsap.to(hintEl, { opacity:1, duration:.4, ease:'power2.out' }); }
+    } });
 
   /* 00 · the mark, as a window — grows until it swallows the white page,
      then dissolves well before chapter 1 arrives. It does not linger. */
@@ -1382,7 +1444,6 @@ function buildFilm(){
     trigger:'#ch0', start:'top top', end:'+=130%', pin:true, scrub:true,
     onUpdate: st => {
       const p = st.progress;
-      heroU.scale = 1 + p * 4.6;
       heroU.scrollV = p - heroU.scrollP;
       heroU.scrollP = p;
       const bg = Math.max(0, 1 - p * 1.35);
@@ -1394,11 +1455,30 @@ function buildFilm(){
       // growth begins
       gsap.set('.hero-heading', { opacity: Math.max(0, 1 - p * 6) });
       gsap.set('.hero-caption', { opacity: Math.max(0, 1 - p * 6) });
-      // the window dissolves in the middle third of the scroll, well before
-      // the pin releases, so chapter 1 always arrives into empty dark —
-      // wide margin on purpose, this is the one transition that must never
-      // visibly overlap the next chapter
-      heroU.reveal = p < 0.42 ? 1 : Math.max(0, 1 - (p - 0.42) / 0.4);
+
+      // the reveal fade alone owns the handoff into darkness: eased, and
+      // fully resolved by p=.6 — a wide margin before the pin releases at
+      // p=1, so chapter 1 never arrives to find anything still visible.
+      // (this used to share the raw, unclamped 0..1 scroll progress with
+      // the barrel-pinch distortion below, so the pinch kept intensifying
+      // for the entire pin while the fade tried to complete in the same
+      // window — two competing signals fighting over one transition read
+      // as an unwanted twirl plus flicker right where the shape should
+      // have simply been gone.)
+      const revealP = clamp01(p / 0.6);
+      heroU.reveal = 1 - easeInOutCubic(revealP);
+
+      // the barrel pinch is scroll's own distortion, separate from the
+      // cursor-proximity one in the fragment shader — it now saturates
+      // early (by p=.4) and holds, instead of growing across the whole
+      // pin, so it's no longer still evolving underneath the fade once
+      // the fade has taken over
+      heroU.scrollZ = easeInOutCubic(clamp01(p / 0.4));
+
+      // hard failsafe: once scroll is effectively done, force the canvas
+      // fully invisible regardless of shader state — nothing can visibly
+      // persist into chapter 1 even if a uniform doesn't land exactly on
+      // zero
       if (heroCanvasEl) heroCanvasEl.style.opacity = p >= 0.98 ? 0 : 1;
     },
     onLeaveBack: () => { if (heroCanvasEl) heroCanvasEl.style.opacity = 1; }
@@ -1411,14 +1491,14 @@ function buildFilm(){
     onEnterBack: () => heroCanvasEl.style.visibility = 'visible'
   });
 
-  /* 01 · the trace — seen scatters, remembered resolves, dust becomes the mark */
+  /* 01 · the thesis — pure kinetic type, no particle system underneath it.
+     the ambient dust keeps doing its own quiet thing in the background
+     (untouched here); this chapter no longer drives it into a "coalesce
+     into the mark" moment of its own — that spectacle now belongs to the
+     hero and the closing chapter only. shorter pin than before, too: a
+     two-line beat doesn't need the runway a WebGL event did. */
   const tl1 = gsap.timeline({
-    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=120%', pin:true, scrub:true,
-      onUpdate: st => {
-        const p = st.progress;
-        film.phase = Math.min(1, Math.max(0, (p - 0.18) / 0.6));
-        film.wobble = wobbleFor(film.phase);
-      } }
+    scrollTrigger: { trigger:'#ch1', start:'top top', end:'+=90%', pin:true, scrub:true }
   });
   tl1.fromTo(seenChars, { opacity:0, y:14 },
       { opacity:1, y:0, stagger:.012, duration:.1, ease:'power2.out' }, 0)
@@ -1437,10 +1517,17 @@ function buildFilm(){
     opacity:0, y:-80, ease:'none'
   });
 
-  /* into 02 — the mark lies down and becomes the horizon */
+  /* into 02 — dust, mark and horizon in one continuous ambient sweep.
+     with chapter 1's own coalesce-into-the-mark event gone, this single
+     entry drives the dust all the way from its resting cloud (0), briefly
+     and quietly through the mark's own shape (1, no dwell — it's a
+     pass-through, not a spectacle), and down into the horizon shelf it
+     rests on through the archive and bio chapters (2). it's dimming over
+     this same range (see fadeST below), so it never reads as a second
+     "reveal" — just atmosphere settling in behind the text. */
   ScrollTrigger.create({
     trigger:'#ch2', start:'top bottom', end:'top 20%', scrub:true,
-    onUpdate: st => { film.phase = 1 + st.progress; film.wobble = wobbleFor(film.phase); }
+    onUpdate: st => { film.phase = st.progress * 2; film.wobble = wobbleFor(film.phase); }
   });
   const fadeST = (trigger, start, end, a, b) => ScrollTrigger.create({ trigger, start, end, scrub:true,
     onUpdate: st => film.opacity = a + (b - a) * st.progress });
@@ -1470,6 +1557,17 @@ function buildFilm(){
       scrollTrigger:{ trigger:el, start:'top 88%' } });
   });
 
+  /* footer reveals — 'top 88%' can never fire for content this close to the
+     very end of the page: once the page runs out of scroll room, the
+     footer's top freezes wherever it lands, which may never reach 88% down
+     the viewport, leaving it stuck at opacity 0 forever. 'top bottom' fires
+     the moment the element starts entering the viewport at all, which is
+     always reachable regardless of how little scroll room is left below it. */
+  $$('[data-io-end]').forEach(el => {
+    gsap.fromTo(el, { opacity:0, y:24 }, { opacity:1, y:0, duration:1.1, ease:'expo.out',
+      scrollTrigger:{ trigger:el, start:'top bottom' } });
+  });
+
   /* record rows rise from the shelf of dust */
   $$('.record').forEach((rec,i) => {
     gsap.fromTo(rec, { opacity:0, y:70 }, { opacity:1, y:0, duration:1.2, delay:i*.06, ease:'expo.out',
@@ -1486,38 +1584,39 @@ function buildFilm(){
         scrollTrigger:{ trigger:p, start:'top 86%' } });
   });
 
-  /* film brightens again before the fade */
-  fadeST('#ch4', 'top bottom', 'top 30%', .38, .68);
-
-  /* 04 · the fade — the image dissolves, the work stays */
+  /* 04 · the fade — a small, contained, connective beat: two short lines,
+     restrained motion, no shader, not pinned. This used to be a full-screen
+     particle event (the dust rising toward its next formation); that was
+     the site's third "coalesce into the mark" moment and diluted the two
+     real spectacles either side of it. The ambient dust itself just holds
+     quietly here — same level it settled to in the archive — with no
+     phase/wobble driving of its own. */
   gsap.timeline({
-    scrollTrigger: { trigger:'#ch4', start:'top top', end:'+=150%', pin:true, scrub:true,
-      onUpdate: st => {
-        const p = st.progress;
-        film.phase = 2 + Math.min(1, Math.max(0, (p - 0.12) / 0.62));
-        film.wobble = wobbleFor(film.phase);
-      } }
+    scrollTrigger: { trigger:'#ch4', start:'top 75%', end:'top 25%', scrub:true }
   })
-  .fromTo(fadeChars, { opacity:0, y:16 }, { opacity:1, y:0, stagger:.012, duration:.1, ease:'power2.out' }, 0)
-  .to(fadeChars, { y: i => -70 - (i%5)*30, opacity:0,
-      stagger:{ each:.01, from:'random' }, duration:.34, ease:'power1.in' }, .2)
-  .fromTo('#stays', { opacity:0, filter:'blur(14px)' },
-      { opacity:1, filter:'blur(0px)', duration:.3, ease:'power2.out' }, .34)
+  .fromTo(fadeChars, { opacity:0, y:10 }, { opacity:1, y:0, stagger:.02, duration:.15, ease:'power2.out' }, 0)
+  .to(fadeChars, { y:-24, opacity:0, stagger:{ each:.015, from:'start' }, duration:.25, ease:'power1.in' }, .3)
+  .fromTo('#stays', { opacity:0, filter:'blur(8px)' },
+      { opacity:1, filter:'blur(0px)', duration:.3, ease:'power2.out' }, .55)
   .fromTo('#stays .stop', { scale:0, transformOrigin:'50% 70%' },
-      { scale:1, duration:.12, ease:'back.out(3)' }, .66)
-  .to({}, { duration:.14 });
+      { scale:1, duration:.12, ease:'back.out(3)' }, .8)
+  .to({}, { duration:.1 });
 
   gsap.to('#ch4 .fadewrap', {
     scrollTrigger:{ trigger:'#ch5', start:'top bottom', end:'top 50%', scrub:true },
-    opacity:0, y:-60, ease:'none'
+    opacity:0, y:-30, ease:'none'
   });
 
-  /* 05 · the invitation — what remains is the mark itself */
+  /* 05 · the invitation — the closing spectacle: what remains is the mark
+     itself. Self-contained — it carries the dust the rest of the way from
+     wherever the ambient horizon (phase 2) left it, through rise (3) and
+     into the fully formed mark (4), brightening in lockstep so the
+     formation and the light arrive together. */
   ScrollTrigger.create({
-    trigger:'#ch5', start:'top 85%', end:'center 55%', scrub:true,
-    onUpdate: st => { film.phase = 3 + st.progress; film.wobble = wobbleFor(film.phase); }
+    trigger:'#ch5', start:'top 90%', end:'center 50%', scrub:true,
+    onUpdate: st => { film.phase = 2 + st.progress * 2; film.wobble = wobbleFor(film.phase); }
   });
-  fadeST('#ch5', 'top 80%', 'center center', .68, .5);
+  fadeST('#ch5', 'top 90%', 'center 50%', .38, .92);
 
   const invT = gsap.timeline({ scrollTrigger:{ trigger:'#inv-title', start:'top 80%' } });
   invT.to('#inv-title .word > span', { y:0, duration:1.2, stagger:.08, ease:'expo.out' })
