@@ -805,22 +805,113 @@ function initThree(){
 }
 if (GL) initThree();
 
-/* ————————————————— hero — the mark as a window ————————————————— */
-const heroU = { scale: 1, reveal: 0 };
-let heroRenderer = null, heroUniforms = null;
+/* ————————————————— hero — the mark as a window —————————————————
+   shape/shader ported from podium.global's hero effect: an SDF-blended
+   shape mask (circle -> mark morph) with mouse-trail fluid displacement
+   and scroll-tied barrel pinch. GLSL below is carried over near-verbatim
+   from their shipped bundle; the shape source (their KTX2 podium-shape
+   texture) is swapped for an SDF baked from our own mark, and the flat
+   fill color is ours. The pinned-chapter zoom/dissolve on scroll is this
+   site's own addition (uReveal), grafted on to keep the existing scroll
+   choreography working with the new shader. */
+const heroU = { scale: 1, reveal: 0, scrollP: 0, scrollV: 0 };
+const heroShape = { shapeReveal: 0, pulseReveal: 0 };
+let heroRenderer = null, heroUniforms = null, heroTouch = null;
 
-function buildHeroMaskTexture(){
-  const size = 640;
+// generic two-pass 8-neighbour signed-distance-field bake from a filled
+// Path2D — not target-specific, stands in for the KTX2 SDF asset podium
+// ships and bakes at load instead of build time
+function buildHeroSDF(size){
   const cv = document.createElement('canvas'); cv.width = cv.height = size;
   const ctx = cv.getContext('2d');
   const p = new Path2D('M15.036 20.5002L3.52176 0.556814C3.3229 0.212306 2.95543 0 2.55771 0L1.11305 0C0.498547 0 0 0.498556 0 1.11307L0 30.8869C0 31.5014 0.498547 32 1.11305 32H13.37C13.7677 32 14.1352 31.7877 14.3341 31.4432L20.4421 20.8637C20.8706 20.1215 21.9417 20.1215 22.3702 20.8637L28.4782 31.4432C28.6771 31.7877 29.0446 32 29.4423 32H30.887C31.5015 32 32 31.5014 32 30.8869V1.11307C32 0.498556 31.5015 0 30.887 0L29.4423 0C29.0446 0 28.6771 0.212306 28.4782 0.556814L16.964 20.5007C16.5355 21.243 15.4645 21.243 15.036 20.5007V20.5002Z');
-  ctx.translate(size*0.06, size*0.06); ctx.scale(size*0.88/32, size*0.88/32);
-  ctx.fillStyle = '#fff'; ctx.filter = 'blur(5px)'; ctx.fill(p);
+  ctx.translate(size*0.14, size*0.14); ctx.scale(size*0.72/32, size*0.72/32);
+  ctx.fillStyle = '#fff'; ctx.fill(p);
+
+  const n = size*size;
+  const img = ctx.getImageData(0,0,size,size).data;
+  const inside = new Uint8Array(n);
+  for (let i=0;i<n;i++) inside[i] = img[i*4+3] > 127 ? 1 : 0;
+
+  const INF = 1e6;
+  const passFor = sign => {
+    const dx = new Float32Array(n).fill(INF), dy = new Float32Array(n).fill(INF);
+    for (let i=0;i<n;i++) if (inside[i]===sign){ dx[i]=0; dy[i]=0; }
+    const cmp = (i,x,y,ox,oy) => {
+      const nx=x+ox, ny=y+oy;
+      if (nx<0||nx>=size||ny<0||ny>=size) return;
+      const j = ny*size+nx, ndx=dx[j]+ox, ndy=dy[j]+oy;
+      if (ndx*ndx+ndy*ndy < dx[i]*dx[i]+dy[i]*dy[i]){ dx[i]=ndx; dy[i]=ndy; }
+    };
+    for (let y=0;y<size;y++) for (let x=0;x<size;x++){ const i=y*size+x;
+      cmp(i,x,y,-1,0); cmp(i,x,y,0,-1); cmp(i,x,y,-1,-1); cmp(i,x,y,1,-1); }
+    for (let y=size-1;y>=0;y--) for (let x=size-1;x>=0;x--){ const i=y*size+x;
+      cmp(i,x,y,1,0); cmp(i,x,y,0,1); cmp(i,x,y,1,1); cmp(i,x,y,-1,1); }
+    const out = new Float32Array(n);
+    for (let i=0;i<n;i++) out[i] = Math.sqrt(dx[i]*dx[i]+dy[i]*dy[i]);
+    return out;
+  };
+  const distIn = passFor(0), distOut = passFor(1);
+  const spread = size * 0.22;
+  const out = ctx.createImageData(size,size);
+  for (let i=0;i<n;i++){
+    const signed = inside[i] ? distIn[i] : -distOut[i];
+    const g = Math.max(0, Math.min(1, 0.5 + (signed/spread)*0.5));
+    out.data[i*4] = out.data[i*4+1] = out.data[i*4+2] = (g*255)|0;
+    out.data[i*4+3] = 255;
+  }
+  ctx.putImageData(out,0,0);
   const tex = new THREE.CanvasTexture(cv);
   tex.minFilter = THREE.LinearFilter; tex.magFilter = THREE.LinearFilter;
   tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
   tex.needsUpdate = true;
-  return tex;
+  return { tex, size };
+}
+
+// ported near-verbatim from podium.global's TouchTexture: a canvas2d
+// radial-gradient trail sampled by the shader as uMouseTexture
+class HeroTouchTexture {
+  constructor({ size=256, maxAge=750, radius=.3, intensity=.2, interpolate=0, smoothing=0, minForce=.3, blend='screen', ease=t=>Math.sqrt(1-Math.pow(t-1,2)) } = {}){
+    this.size=size; this.maxAge=maxAge; this.radius=radius; this.intensity=intensity;
+    this.ease=ease; this.interpolate=interpolate; this.smoothing=smoothing;
+    this.minForce=minForce; this.blend=blend; this.trail=[]; this.force=0;
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = this.canvas.height = this.size;
+    this.ctx = this.canvas.getContext('2d');
+    this.ctx.fillStyle = 'black'; this.ctx.fillRect(0,0,this.size,this.size);
+    this.texture = new THREE.CanvasTexture(this.canvas);
+  }
+  update(dt){
+    this.clear();
+    this.trail = this.trail.filter(t => (t.age += 1000*dt) <= this.maxAge);
+    if (!this.trail.length) this.force = 0;
+    this.trail.forEach(t => this.drawTouch(t));
+    this.texture.needsUpdate = true;
+  }
+  clear(){ this.ctx.globalCompositeOperation='source-over'; this.ctx.fillStyle='black'; this.ctx.fillRect(0,0,this.size,this.size); }
+  addTouch(pt){
+    const prev = this.trail[this.trail.length-1];
+    if (prev){
+      const dx=prev.x-pt.x, dy=prev.y-pt.y, d2=dx*dx+dy*dy;
+      const f = Math.max(this.minForce, Math.min(1e4*d2, 1));
+      this.force = f*(1-this.smoothing) + this.force*this.smoothing;
+      if (this.interpolate){
+        const steps = Math.ceil(d2/Math.pow(.5*this.radius/this.interpolate,2));
+        for (let i=1;i<steps;i++) this.trail.push({ x: pt.x-dx/steps*i, y: pt.y-dy/steps*i, age:0, force:f });
+      }
+    }
+    this.trail.push({ x:pt.x, y:pt.y, age:0, force:this.force });
+  }
+  drawTouch(t){
+    const x = t.x*this.size, y = (1-t.y)*this.size;
+    const r = (t.age < .3*this.maxAge ? this.ease(t.age/(.3*this.maxAge)) : this.ease(1-(t.age-.3*this.maxAge)/(.7*this.maxAge))) * t.force;
+    this.ctx.globalCompositeOperation = this.blend;
+    const rad = Math.max(0, this.size*this.radius*r);
+    const grad = this.ctx.createRadialGradient(x,y,Math.max(0,.25*rad), x,y,rad);
+    grad.addColorStop(0, `rgba(255,255,255,${this.intensity})`);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    this.ctx.beginPath(); this.ctx.fillStyle = grad; this.ctx.arc(x,y,rad,0,Math.PI*2); this.ctx.fill();
+  }
 }
 
 function initHero(){
@@ -831,21 +922,36 @@ function initHero(){
   heroRenderer = new THREE.WebGLRenderer({ canvas, antialias:!isTouch, alpha:true, powerPreference:'high-performance' });
   heroRenderer.setPixelRatio(isTouch ? Math.min(devicePixelRatio, 1.25) : Math.min(devicePixelRatio, 1.75));
   const size0 = section.getBoundingClientRect();
-  heroRenderer.setSize(size0.width || innerWidth, size0.height || innerHeight, false);
+  const w0 = size0.width || innerWidth, h0 = size0.height || innerHeight;
+  heroRenderer.setSize(w0, h0, false);
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const geo = new THREE.PlaneGeometry(2,2);
 
+  const shape = buildHeroSDF(512);
+  heroTouch = new HeroTouchTexture({ size:1024, maxAge:600, blend:'difference', radius:.095, intensity:.1, minForce:.5, interpolate:0, smoothing:0 });
+
   heroUniforms = {
-    uResolution: { value: new THREE.Vector2(size0.width||innerWidth, size0.height||innerHeight) },
-    uMouse:      { value: new THREE.Vector2(0.5,0.5) },
-    uTime:       { value: 0 },
-    uScale:      { value: 1 },
-    uReveal:     { value: 0 },
-    uMaskTex:    { value: buildHeroMaskTexture() },
-    uInk:        { value: new THREE.Color(0x141210) },
-    uRed:        { value: new THREE.Color(0xe5352b) }
+    uIsMobile:          { value: isTouch },
+    uTime:              { value: 0 },
+    uShapeReveal:       { value: 0 },
+    uScrollProgress:    { value: 0 },
+    uPulseReveal:       { value: 0 },
+    uScrollZposition:   { value: 0 },
+    uBackgroundPodiumShapeTexture: { value: shape.tex },
+    uTextureShapeSize:  { value: new THREE.Vector2(shape.size, shape.size) },
+    uMouseTexture:      { value: heroTouch.texture },
+    uResolution:        { value: new THREE.Vector2(w0, h0) },
+    uColorBeige:        { value: new THREE.Color(0x141210) },
+    uMeshSize:          { value: new THREE.Vector2(w0, h0) },
+    uScrollVelocity:    { value: 0 },
+    uFluidIntensity:    { value: 0.6 },
+    uNoiseIntensity:    { value: 0.6 },
+    uBarrelIntensity:   { value: isTouch ? 1.5 : 6 },
+    uUvScale:           { value: 1.4 },
+    uPulseMult:         { value: 0.2 },
+    uReveal:            { value: 0 }
   };
 
   const mat = new THREE.ShaderMaterial({
@@ -855,93 +961,162 @@ function initHero(){
       void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }`,
     fragmentShader:`
       precision highp float;
-      uniform vec2 uResolution, uMouse;
-      uniform float uTime, uScale, uReveal;
-      uniform sampler2D uMaskTex;
-      uniform vec3 uInk, uRed;
+      uniform bool uIsMobile;
+      uniform float uTime;
+      uniform float uShapeReveal;
+      uniform float uScrollProgress;
+      uniform float uPulseReveal;
+      uniform float uScrollZposition;
+      uniform sampler2D uBackgroundPodiumShapeTexture;
+      uniform vec2 uTextureShapeSize;
+      uniform sampler2D uMouseTexture;
+      uniform vec2 uResolution;
+      uniform vec3 uColorBeige;
+      uniform vec2 uMeshSize;
+      uniform float uScrollVelocity;
+      uniform float uFluidIntensity;
+      uniform float uNoiseIntensity;
+      uniform float uBarrelIntensity;
+      uniform float uUvScale;
+      uniform float uPulseMult;
+      uniform float uReveal;
       varying vec2 vUv;
 
-      // standard value-noise + fbm — generic technique, not target-specific
-      float hash(vec2 p){
-        p = fract(p*vec2(123.34, 456.21));
-        p += dot(p, p+45.32);
-        return fract(p.x*p.y);
+      float hash(vec2 p) {
+        return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x))));
       }
-      float noise(vec2 p){
-        vec2 i = floor(p), f = fract(p);
-        float a = hash(i), b = hash(i+vec2(1.0,0.0));
-        float c = hash(i+vec2(0.0,1.0)), d = hash(i+vec2(1.0,1.0));
-        vec2 u = f*f*(3.0-2.0*f);
-        return mix(a,b,u.x) + (c-a)*u.y*(1.0-u.x) + (d-b)*u.x*u.y;
+      float noise(vec2 x) {
+        vec2 i = floor(x);
+        vec2 f = fract(x);
+        float a = hash(i);
+        float b = hash(i + vec2(1.0, 0.0));
+        float c = hash(i + vec2(0.0, 1.0));
+        float d = hash(i + vec2(1.0, 1.0));
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
       }
-      float fbm(vec2 p){
-        float v = 0.0, amp = 0.5;
-        for (int i=0;i<4;i++){ v += amp*noise(p); p *= 2.02; amp *= 0.5; }
-        return v;
+      vec2 barrelPincushion(vec2 uv, float strength) {
+        vec2 st = uv - 0.5;
+        float radius = 1.0 + strength * dot(st, st);
+        return 0.5 + radius * st;
+      }
+      float sdCircle(in vec2 p, in float r) {
+        return length(p) - r;
       }
 
-      void main(){
-        vec2 res = uResolution;
-        float aspect = res.x / res.y;
-        // on a narrow/portrait screen the horizontal space in this normalized
-        // unit system shrinks with aspect, so a fixed world-size mask would
-        // overflow the width — compensate by shrinking the mask on narrow
-        // viewports so it never exceeds a comfortable fraction of the screen
-        float aspectComp = clamp(aspect, 0.55, 1.3) / 1.3;
+      void main() {
+        float FLUID_INTENSITY = uFluidIntensity;
+        float NOISE_INTENSITY = uNoiseIntensity;
+        float BARREL_PINCH_INTENSITY = uBarrelIntensity;
 
-        vec2 p = (vUv - 0.5) * vec2(aspect, 1.0);
-        vec2 m = (uMouse - 0.5) * vec2(aspect, 1.0);
+        /** Ratio */
+        float textureShapeRatio = uTextureShapeSize.x / uTextureShapeSize.y;
+        float meshRatio = uMeshSize.x / uMeshSize.y;
+        float resolutionRatio = uResolution.x / uResolution.y;
 
-        float distM = length(p - m);
-        float fall = smoothstep(0.3, 0.0, distM);
-        vec2 dir = (p - m) / (distM + 0.0001);
-        float ripple = sin(distM*16.0 - uTime*2.0) * 0.013 * fall;
-        vec2 dp = p + dir * ripple;
+        /** Pulse */
+        float pulse = uPulseReveal * uPulseMult;
 
-        // pixelation and motion are both dormant at rest — the window only
-        // resolves into blocks and starts drifting once you reach it
-        float cells = mix(100000.0, 34.0, fall);
-        vec2 px = floor(dp * cells) / cells + (0.5 / cells);
-        float motion = mix(0.12, 1.0, fall);
+        /** UV */
+        float uvScale = uUvScale - pulse;
+        vec2 uv = (vUv - 0.5) * uvScale + 0.5;
+        vec2 uvBarrel = barrelPincushion(uv, -uScrollZposition * BARREL_PINCH_INTENSITY);
 
-        float half_h = 0.361 * uScale * aspectComp;
-        vec2 maskUV = (px / half_h) * 0.5 + 0.5;
-        float inBounds = step(0.0, maskUV.x) * step(maskUV.x, 1.0) * step(0.0, maskUV.y) * step(maskUV.y, 1.0);
-        float aRaw = texture2D(uMaskTex, maskUV).a * inBounds;
+        if (meshRatio > textureShapeRatio) {
+          uvBarrel.x = (uvBarrel.x - 0.5) * (meshRatio / textureShapeRatio) + 0.5;
+        } else {
+          uvBarrel.y = (uvBarrel.y - 0.5) * (textureShapeRatio / meshRatio) + 0.5;
+        }
 
-        // soft glowing edge — the mask texture is pre-blurred on the canvas,
-        // so its alpha already carries a wide gradient; split it into a
-        // solid core and a luminous rim instead of one hard cutoff
-        float aCore = smoothstep(0.42, 0.62, aRaw);
-        float aGlow = smoothstep(0.02, 0.42, aRaw) - aCore;
-        vec3 glowTint = mix(uRed, vec3(1.0, 0.93, 0.82), 0.45);
+        vec2 uvMouseTrail;
+        vec3 mouseColor = vec3(0.0);
 
-        float n1 = fbm(px*2.6 + vec2(0.0, uTime*0.045*motion));
-        float n2 = fbm(px*5.5 - vec2(uTime*0.03*motion, 0.0));
-        vec3 content = mix(uInk, uRed, smoothstep(0.58, 0.92, n2));
-        content *= 0.68 + 0.34*n1;
+        if (uIsMobile) {
+          uvMouseTrail = uvBarrel;
+        } else {
+          float fnoise = pow((1.0 - uScrollProgress), 4.0) * noise(uvBarrel * 1000.0) * NOISE_INTENSITY;
+          mouseColor = texture2D(uMouseTexture, vUv).rgb * fnoise;
+          uvMouseTrail = uvBarrel - vec2(mouseColor) * FLUID_INTENSITY;
+        }
 
-        vec3 finalColor = mix(glowTint, content, aCore);
-        float finalAlpha = (aCore + aGlow*0.55) * uReveal;
+        vec2 podiumUv = uvMouseTrail;
+        podiumUv.y = 1.0 - podiumUv.y;
 
-        gl_FragColor = vec4(finalColor, finalAlpha);
+        if (resolutionRatio < 1.0) {
+          podiumUv.y += (1.0 - uScrollProgress) * (1.0 - resolutionRatio) * 0.3;
+        }
+
+        /** Texture Map */
+        vec3 textureMap = texture2D(uBackgroundPodiumShapeTexture, podiumUv).rgb;
+
+        /** Circle SDF */
+        vec2 circleUv = vUv - 0.5;
+        circleUv.x *= uMeshSize.x / uMeshSize.y;
+        float sdf_circle = sdCircle(circleUv, 0.01);
+
+        /** Texture shape SDF */
+        float sdf_texture = 0.5 - textureMap.g;
+
+        /** Blend SDFs */
+        float sdf_final = mix(sdf_texture, sdf_circle, 1.0 - uShapeReveal);
+
+        float edgeDist = abs(sdf_final);
+        float edgeGuard = smoothstep(0.0, 0.05, edgeDist);
+        float sdf_clean = mix(sdf_texture, sdf_final, edgeGuard);
+        float sdf_guarded = mix(sdf_clean, sdf_final, edgeGuard);
+        sdf_final = mix(sdf_final, sdf_guarded, uShapeReveal);
+
+        float mask = mix(
+          smoothstep(0.001, 0.003, sdf_final),
+          smoothstep(0.0, 0.003, sdf_final),
+          pow(uShapeReveal, 4.0)
+        );
+
+        if (!uIsMobile) {
+          float mask_scale_and_blur = length(circleUv) + smoothstep(-1.0, 1.0, sdf_final) + 0.3;
+          mask = mix(mask, mask_scale_and_blur, uPulseReveal);
+          mask = pow(mask, 4.0);
+        }
+
+        vec3 color = vec3(uColorBeige);
+        // podium's mask is a hole cut into a full-bleed overlay (it reveals
+        // a video layer sitting behind the shape plane); we have no such
+        // layer to reveal, and this site's own hero has always been "the
+        // mark as a solid window", so we invert: the shape itself paints
+        // in, everything outside stays transparent.
+        gl_FragColor = vec4(color, (1.0 - mask) * uReveal);
       }`
   });
 
   scene.add(new THREE.Mesh(geo, mat));
 
+  // feed the mouse trail only when the pointer has actually moved, same
+  // as podium's discrete addTouch-on-move (not a per-frame sample)
+  let lastTx = null, lastTy = null;
   let visible = true;
   document.addEventListener('visibilitychange', () => visible = !document.hidden);
   const clock = new THREE.Clock();
+  let prevT = clock.getElapsedTime();
   const tick = () => {
     requestAnimationFrame(tick);
     if (!visible || !heroRenderer) return;
-    heroUniforms.uTime.value = clock.getElapsedTime();
-    heroUniforms.uScale.value = heroU.scale;
+    const now = clock.getElapsedTime();
+    const dt = Math.max(0, now - prevT); prevT = now;
+    heroUniforms.uTime.value = now;
+    heroUniforms.uShapeReveal.value = heroShape.shapeReveal;
+    heroUniforms.uPulseReveal.value = heroShape.pulseReveal;
+    heroUniforms.uScrollProgress.value = heroU.scrollP;
+    heroUniforms.uScrollZposition.value = heroU.scrollP;
+    heroUniforms.uScrollVelocity.value = heroU.scrollV;
     heroUniforms.uReveal.value = heroU.reveal;
+
     const mx = (mouse.nx + 1) / 2, my = 1 - (mouse.ny + 1) / 2;
-    heroUniforms.uMouse.value.x = lerp(heroUniforms.uMouse.value.x, mx, .12);
-    heroUniforms.uMouse.value.y = lerp(heroUniforms.uMouse.value.y, my, .12);
+    if (mx !== lastTx || my !== lastTy){
+      heroTouch.addTouch({ x: mx, y: my });
+      lastTx = mx; lastTy = my;
+    }
+    heroTouch.update(dt);
+
     heroRenderer.render(scene, camera);
   };
   tick();
@@ -951,6 +1126,7 @@ function initHero(){
     const w = r.width || innerWidth, h = r.height || innerHeight;
     heroRenderer.setSize(w, h, false);
     heroUniforms.uResolution.value.set(w, h);
+    heroUniforms.uMeshSize.value.set(w, h);
   };
   addEventListener('resize', resizeHero);
 }
@@ -1208,6 +1384,8 @@ function buildFilm(){
     onUpdate: st => {
       const p = st.progress;
       heroU.scale = 1 + p * 4.6;
+      heroU.scrollV = p - heroU.scrollP;
+      heroU.scrollP = p;
       const bg = Math.max(0, 1 - p * 1.35);
       if (ch0El) ch0El.style.setProperty('--hero-bg', bg);
       document.body.classList.toggle('chrome-light', bg > 0.5);
@@ -1417,6 +1595,15 @@ function openVeil(){
     .set(veil, { display:'none' })
     /* the mark opens its eyes — the window comes alive before anything else */
     .to(heroU, { reveal:1, duration:1.6, ease:'power1.inOut' }, '-=1.1')
+    /* circle morphs into the mark, then blooms into the soft pulsed rim —
+       podium's own load-in curve: cubic in/out reveal, pulse eased^12.
+       podium decays the pulse continuously via a scroll-velocity threshold
+       we don't have the source for, so this settle-back is our own
+       disclosed stand-in rather than a sourced value, keeping the resting
+       mark crisp instead of stuck mid-bloom. */
+    .to(heroShape, { shapeReveal:1, duration:.9, ease:'power3.inOut',
+        onUpdate(){ heroShape.pulseReveal = Math.pow(heroShape.shapeReveal, 12); } }, '<')
+    .to(heroShape, { pulseReveal:0, duration:.7, ease:'power2.out' })
     .to('.hero-heading', { opacity:1, duration:1.1 }, '-=.9')
     .to('.hero-caption', { opacity:1, duration:1.1 }, '-=.9')
     .to('.mark', { opacity:1, duration:1 }, '-=.9')
