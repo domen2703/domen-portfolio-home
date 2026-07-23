@@ -203,9 +203,10 @@ section{position:relative}
 #ch2 .intro b{color:var(--cream);font-weight:500}
 .plist{border-top:1px solid var(--cream-10)}
 .prow{border-bottom:1px solid var(--cream-10)}
-.prow__head{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:clamp(16px,2.4vw,32px);width:100%;padding:clamp(20px,3.2vh,34px) var(--pad);cursor:none;transition:background-color .5s}
+.prow__head{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:clamp(16px,2.4vw,32px);width:100%;padding:clamp(20px,3.2vh,34px) var(--pad);cursor:none;transition:background-color .5s,transform .15s cubic-bezier(0.4,0,0.2,1)}
 body.touch .prow__head{cursor:pointer}
 .prow__head:hover{background:var(--cream-06)}
+.prow__head:active{transform:scale(.995)}
 .prow__num{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.3em;color:var(--cream-40);flex:none;width:28px}
 .prow__name{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(26px,3.6vw,52px);line-height:1;flex:none;width:clamp(160px,22vw,340px);transition:color .4s}
 .prow__head:hover .prow__name{color:var(--accent)}
@@ -218,8 +219,12 @@ body.touch .prow__head{cursor:pointer}
 @media (hover:hover) and (pointer:fine){ .prow__head:hover .prow__cta{opacity:1;transform:translateX(0)} }
 .prow__toggle{flex:none;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--cream-40);width:34px;text-align:right;transition:color .4s}
 .prow__head:hover .prow__toggle{color:var(--cream)}
-.prow__body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .65s var(--ease-io)}
-.prow.is-open .prow__body{grid-template-rows:1fr}
+/* asymmetric open/close: opening is the deliberate, "arriving" motion
+   (ease-out, slightly longer) while closing builds momentum and gets out
+   of the way quicker (ease-in, shorter) — CSS reads the transition off
+   the state being entered, so the two rules below apply independently */
+.prow__body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(0.4,0,1,1)}
+.prow.is-open .prow__body{grid-template-rows:1fr;transition:grid-template-rows .48s cubic-bezier(0.22,1,0.36,1)}
 .prow__body-in{overflow:hidden;min-height:0}
 .prow__body-content{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.45fr);gap:clamp(28px,4.5vw,80px);padding:8px var(--pad) clamp(48px,7vh,88px) calc(var(--pad) + 62px)}
 .prow__copy{font-size:clamp(15px,1.3vw,18px);line-height:1.75;color:var(--cream-70);max-width:44ch}
@@ -295,14 +300,15 @@ body.touch .prow__head{cursor:pointer}
    WebGL background (lazy-initialised only once it's near view), a mega
    wordmark for scale contrast against the small nav columns, and the
    copy-email affordance kept from before */
-footer{position:relative;margin-top:26vh;padding:9vh var(--pad) 40px;isolation:isolate}
-/* the canvas extends 60vh above the footer's own box (not clipped —
-   footer no longer has overflow:hidden) so the gradient bleeds into the
-   tail of chapter 5 instead of starting with a hard edge exactly at the
-   footer boundary; the shader itself also fades its own colour to
-   nothing across that extra height (see uFadeFrac) so the seam is gone
-   from both sides at once */
-#footer-canvas{position:absolute;left:0;right:0;top:-60vh;bottom:0;z-index:-1;width:100%;height:calc(100% + 60vh);display:block;touch-action:pan-y;opacity:0;transition:opacity 1.2s var(--ease-out)}
+footer{position:relative;margin-top:26vh;padding:9vh var(--pad) 40px;overflow:hidden;isolation:isolate}
+/* the canvas stays contained inside the footer's own box — an earlier
+   version bled it upward past the footer boundary to blend into chapter
+   5, but since footer comes after ch5 in DOM order and the negative
+   offset put it visually over ch5's own content, it painted on top of
+   (hid) the tail of chapter 5 instead of behind it. The soft top-edge
+   fade now happens entirely inside the shader (see uFadeIn) so nothing
+   needs to escape the footer's own stacking context. */
+#footer-canvas{position:absolute;inset:0;z-index:-1;width:100%;height:100%;display:block;touch-action:pan-y;opacity:0;transition:opacity 1.2s var(--ease-out)}
 #footer-canvas.is-in{opacity:1}
 
 .fhead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;padding-bottom:8vh;border-bottom:1px solid var(--cream-10)}
@@ -317,9 +323,23 @@ footer{position:relative;margin-top:26vh;padding:9vh var(--pad) 40px;isolation:i
 .fcol a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:currentColor;transform:scaleX(0);transform-origin:right;transition:transform .45s var(--ease-io)}
 .fcol a:hover{color:var(--cream)}
 .fcol a:hover::after{transform:scaleX(1);transform-origin:left}
-.fcol .copy-email{appearance:none;background:none;border:1px solid var(--cream-24);border-radius:99px;color:var(--cream-55);font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.05em;padding:8px 16px;width:fit-content;transition:border-color .4s,color .4s,background-color .4s}
+.fcol .copy-email{appearance:none;background:none;border:1px solid var(--cream-24);border-radius:99px;color:var(--cream-55);font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.05em;padding:8px 16px;width:fit-content;position:relative;transition:border-color .4s,color .4s,background-color .4s,transform .15s cubic-bezier(0.4,0,0.2,1)}
 .fcol .copy-email:hover{border-color:var(--accent);color:var(--cream)}
+.fcol .copy-email:active{transform:scale(.97)}
 .fcol .copy-email.is-copied{border-color:var(--red);color:var(--red)}
+/* P6 text-swap (transitions.dev): .ce-a stays in flow (sets the button's
+   own width), .ce-b sits on top absolutely — both cross-fade with a
+   slight blur+lift so "copy email" -> "copied" reads as one continuous
+   label, not a hard content swap */
+.fcol .copy-email .ce-label{display:inline-block;transition:opacity .2s ease-out,filter .2s ease-out,transform .2s ease-out}
+.fcol .copy-email .ce-a{opacity:1;filter:blur(0);transform:translateY(0)}
+.fcol .copy-email .ce-b{position:absolute;top:8px;left:16px;opacity:0;filter:blur(4px);transform:translateY(8px)}
+.fcol .copy-email[data-state="b"] .ce-a{opacity:0;filter:blur(4px);transform:translateY(-8px)}
+.fcol .copy-email[data-state="b"] .ce-b{opacity:1;filter:blur(0);transform:translateY(0)}
+@media (prefers-reduced-motion:reduce){
+  .fcol .copy-email .ce-label{transition:opacity .12s ease !important;transform:none !important;filter:none !important}
+  .fcol .copy-email{transition:border-color .4s,color .4s,background-color .4s}
+}
 
 .fmarkwrap{padding:6vh 0 4vh;overflow:hidden}
 .fmarktext{display:block;font-family:var(--kuevy);text-transform:lowercase;font-weight:400;line-height:.86;letter-spacing:-.02em;font-size:clamp(64px,13vw,220px);background:linear-gradient(100deg,var(--accent) 0%,var(--cream) 40%,var(--cream) 60%,var(--red) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -498,7 +518,10 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
         <div class="fcol">
           <span class="fcol__label">get in touch</span>
           <a href="mailto:info@domenmarkeljc.com" data-hover>email</a>
-          <button type="button" class="copy-email" id="copy-email" data-hover data-email="info@domenmarkeljc.com" aria-label="copy email address to clipboard">copy email</button>
+          <button type="button" class="copy-email" id="copy-email" data-hover data-email="info@domenmarkeljc.com" aria-label="copy email address to clipboard" data-state="a">
+            <span class="ce-a ce-label">copy email</span>
+            <span class="ce-b ce-label">copied</span>
+          </button>
         </div>
       </div>
       <div class="fmarkwrap" aria-hidden="true"><span class="fmarktext">domen markeljc</span></div>
@@ -1123,8 +1146,8 @@ if (clockEl){
 /* copy the email straight to the clipboard — no mail client detour */
 {
   const copyBtn = $('#copy-email');
+  const copyBtnAlt = copyBtn && copyBtn.querySelector('.ce-b');
   if (copyBtn){
-    const label = copyBtn.textContent;
     let revertTimer = null;
     copyBtn.addEventListener('click', async () => {
       const email = copyBtn.dataset.email;
@@ -1138,14 +1161,16 @@ if (clockEl){
           document.body.appendChild(ta); ta.select();
           document.execCommand('copy'); ta.remove();
         }
-        copyBtn.textContent = 'copied';
+        if (copyBtnAlt) copyBtnAlt.textContent = 'copied';
+        copyBtn.dataset.state = 'b';
         copyBtn.classList.add('is-copied');
       } catch (e) {
-        copyBtn.textContent = email;
+        if (copyBtnAlt) copyBtnAlt.textContent = email;
+        copyBtn.dataset.state = 'b';
       }
       clearTimeout(revertTimer);
       revertTimer = setTimeout(() => {
-        copyBtn.textContent = label;
+        copyBtn.dataset.state = 'a';
         copyBtn.classList.remove('is-copied');
       }, 1600);
     });
@@ -1163,25 +1188,17 @@ function initFooterGradient(){
   const footerEl = $('footer');
   if (!canvas || !footerEl || !GL) return;
 
-  // the canvas is taller than the footer itself (see CSS: top:-60vh) so the
-  // gradient can bleed into the tail of chapter 5 — uFadeFrac tells the
-  // shader where the footer's own top edge sits within that taller frame,
-  // so it can fade its colour out to nothing above it instead of cutting
-  // off hard at the boundary
-  const extendPx = () => innerHeight * 0.6;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, alpha:true, powerPreference:'low-power' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   const size0 = footerEl.getBoundingClientRect();
-  const h0 = Math.max(size0.height, innerHeight) + extendPx();
-  renderer.setSize(size0.width || innerWidth, h0, false);
+  renderer.setSize(size0.width || innerWidth, Math.max(size0.height, innerHeight), false);
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const geo = new THREE.PlaneGeometry(2,2);
   const uniforms = {
     uTime: { value: 0 },
-    uResolution: { value: new THREE.Vector2(size0.width||innerWidth, h0) },
-    uFadeFrac: { value: Math.max(size0.height, innerHeight) / h0 },
+    uResolution: { value: new THREE.Vector2(size0.width||innerWidth, size0.height||innerHeight) },
     uMouse: { value: new THREE.Vector2(0.5, 0.4) },
     uMouseActive: { value: 0 },
     uMouseEnergy: { value: 0 }
@@ -1193,7 +1210,6 @@ function initFooterGradient(){
       precision highp float;
       uniform float uTime;
       uniform vec2 uResolution;
-      uniform float uFadeFrac;
       uniform vec2 uMouse;
       uniform float uMouseActive;
       uniform float uMouseEnergy;
@@ -1205,42 +1221,42 @@ function initFooterGradient(){
       void main(){
         float aspect = uResolution.x / max(uResolution.y, 1.0);
         vec2 uv = vUv * vec2(aspect, 1.0);
-        float t = uTime * 0.05;
+        float t = uTime * 0.04;
 
         // the ambient blobs drift on their own, but the pointer gently
         // pulls them toward it — the whole mesh leans into your cursor
         // rather than just adding a spot on top of it
         vec2 m = uMouse * vec2(aspect, 1.0);
-        vec2 pull = (m - vec2(0.5*aspect, 0.45)) * 0.1 * uMouseActive;
+        vec2 pull = (m - vec2(0.5*aspect, 0.45)) * 0.06 * uMouseActive;
 
         vec2 c1 = vec2(0.25 + sin(t*1.3)*0.16, 0.55 + cos(t*1.05)*0.18) * vec2(aspect,1.0) + pull;
         vec2 c2 = vec2(0.75 + cos(t*0.85)*0.18, 0.65 + sin(t*1.35)*0.16) * vec2(aspect,1.0) + pull*0.6;
         vec2 c3 = vec2(0.5 + sin(t*0.65+2.1)*0.22, 0.25 + cos(t*0.55)*0.16) * vec2(aspect,1.0) + pull*0.8;
         vec2 c4 = vec2(0.18 + cos(t*1.1+1.3)*0.12, 0.2 + sin(t*0.75)*0.14) * vec2(aspect,1.0) + pull*0.5;
 
-        // kept deliberately subtle — this used to read as a bold, obvious
-        // effect; intensities are roughly halved and the blobs themselves
-        // are a little smaller so it sits underneath the content instead
-        // of competing with it
+        // kept deliberately subtle — this read as too bold/obvious twice
+        // already; intensities are roughly a third of the original now,
+        // so it sits as a faint ambient tint well underneath the content
         vec3 col = vec3(0.039, 0.035, 0.031);
-        col += blob(uv, c1, 0.52) * vec3(0.898, 0.208, 0.169) * 0.26;
-        col += blob(uv, c2, 0.46) * vec3(0.224, 0.443, 1.0) * 0.24;
-        col += blob(uv, c3, 0.58) * vec3(1.0, 0.69, 0.125) * 0.16;
-        col += blob(uv, c4, 0.42) * vec3(0.224, 0.443, 1.0) * 0.14;
+        col += blob(uv, c1, 0.5) * vec3(0.898, 0.208, 0.169) * 0.13;
+        col += blob(uv, c2, 0.44) * vec3(0.224, 0.443, 1.0) * 0.12;
+        col += blob(uv, c3, 0.56) * vec3(1.0, 0.69, 0.125) * 0.08;
+        col += blob(uv, c4, 0.4) * vec3(0.224, 0.443, 1.0) * 0.07;
 
         // a fifth blob that IS the cursor — brightens and swells with how
         // fast you're moving, fades out entirely once the pointer leaves
-        float mr = 0.28 + uMouseEnergy * 0.16;
+        float mr = 0.26 + uMouseEnergy * 0.14;
         float mGlow = blob(uv, m, mr) * uMouseActive;
         vec3 mColor = mix(vec3(1.0, 0.69, 0.125), vec3(1.0, 0.87, 0.6), uMouseEnergy);
-        col += mGlow * mColor * (0.2 + uMouseEnergy * 0.28);
+        col += mGlow * mColor * (0.1 + uMouseEnergy * 0.14);
 
-        // fade the whole coloured contribution to nothing across the
-        // extended top of the canvas, so it blends into the plain body
-        // background above rather than cutting off at the footer edge
-        float edgeFade = 1.0 - smoothstep(uFadeFrac, 1.0, vUv.y);
+        // a soft fade across the footer's own top edge — keeps the
+        // hand-off from chapter 5 gentle without the canvas needing to
+        // escape the footer's box (that caused it to paint over ch5's
+        // own content instead of blending behind it)
+        float edgeFade = smoothstep(0.78, 1.0, vUv.y);
         vec3 addedColor = col - vec3(0.039, 0.035, 0.031);
-        col = vec3(0.039, 0.035, 0.031) + addedColor * edgeFade;
+        col = vec3(0.039, 0.035, 0.031) + addedColor * (1.0 - edgeFade * 0.85);
 
         gl_FragColor = vec4(col, 1.0);
       }`
@@ -1287,10 +1303,9 @@ function initFooterGradient(){
 
   addEventListener('resize', () => {
     const r = footerEl.getBoundingClientRect();
-    const w = r.width || innerWidth, h = Math.max(r.height, innerHeight) + extendPx();
+    const w = r.width || innerWidth, h = Math.max(r.height, innerHeight);
     renderer.setSize(w, h, false);
     uniforms.uResolution.value.set(w, h);
-    uniforms.uFadeFrac.value = Math.max(r.height, innerHeight) / h;
   });
 
   requestAnimationFrame(() => canvas.classList.add('is-in'));
@@ -1406,7 +1421,7 @@ function buildFilm(){
   const ch0El = $('#ch0');
   const heroCanvasEl = $('#hero-canvas');
   ScrollTrigger.create({
-    trigger:'#ch0', start:'top top', end:'+=70%', pin:true, scrub:true,
+    trigger:'#ch0', start:'top top', end:'+=20%', pin:true, scrub:true,
     onUpdate: st => {
       const p = st.progress;
       heroU.scrollV = p - heroU.scrollP;
