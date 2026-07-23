@@ -86,14 +86,24 @@ body.touch a,body.touch button{cursor:pointer}
 /* the body is near-black by default, but nothing past the hero should
    read as flat/off — each chapter tints the same fixed wash a different
    colour, so the film stays "warm dark" the whole way down instead of
-   just going black once the hero's paper background ends */
-#bg-wash{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.4s ease,background 1.4s ease}
+   just going black once the hero's paper background ends.
+   Each chapter is its OWN fixed layer with a permanent gradient, and only
+   opacity ever animates between them — cross-fading the `background`
+   value directly (different gradient shapes/stops) doesn't interpolate
+   smoothly in browsers and was reading as a jump/snap on scroll. */
+#bg-wash{position:fixed;inset:0;z-index:1;pointer-events:none}
 html.static #bg-wash{display:none}
-body.chapter-1 #bg-wash{opacity:1;background:radial-gradient(ellipse 90% 70% at 50% 20%,rgba(57,113,255,.16) 0%,transparent 65%)}
-body.chapter-2 #bg-wash{opacity:1;background:radial-gradient(ellipse 100% 60% at 20% 0%,rgba(229,53,43,.14) 0%,transparent 60%),radial-gradient(ellipse 80% 60% at 90% 40%,rgba(57,113,255,.1) 0%,transparent 65%)}
-body.chapter-3 #bg-wash{opacity:1;background:radial-gradient(ellipse 90% 70% at 80% 30%,rgba(255,176,32,.14) 0%,transparent 65%)}
-body.chapter-4 #bg-wash{opacity:1;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(57,113,255,.12) 0%,transparent 65%)}
-body.chapter-5 #bg-wash{opacity:1;background:radial-gradient(ellipse 110% 80% at 50% 80%,rgba(229,53,43,.18) 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 15% 20%,rgba(255,176,32,.1) 0%,transparent 65%)}
+#bg-wash .wash{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
+#bg-wash .wash--1{background:radial-gradient(ellipse 90% 70% at 50% 20%,rgba(57,113,255,.16) 0%,transparent 65%)}
+#bg-wash .wash--2{background:radial-gradient(ellipse 100% 60% at 20% 0%,rgba(229,53,43,.14) 0%,transparent 60%),radial-gradient(ellipse 80% 60% at 90% 40%,rgba(57,113,255,.1) 0%,transparent 65%)}
+#bg-wash .wash--3{background:radial-gradient(ellipse 90% 70% at 80% 30%,rgba(255,176,32,.14) 0%,transparent 65%)}
+#bg-wash .wash--4{background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(57,113,255,.12) 0%,transparent 65%)}
+#bg-wash .wash--5{background:radial-gradient(ellipse 110% 80% at 50% 80%,rgba(229,53,43,.18) 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 15% 20%,rgba(255,176,32,.1) 0%,transparent 65%)}
+body.chapter-1 #bg-wash .wash--1{opacity:1}
+body.chapter-2 #bg-wash .wash--2{opacity:1}
+body.chapter-3 #bg-wash .wash--3{opacity:1}
+body.chapter-4 #bg-wash .wash--4{opacity:1}
+body.chapter-5 #bg-wash .wash--5{opacity:1}
 #grain{position:fixed;inset:-100px;z-index:60;pointer-events:none;opacity:.07;mix-blend-mode:overlay}
 #vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
   background:radial-gradient(ellipse 120% 90% at 50% 45%,transparent 55%,rgba(5,4,3,.55) 100%)}
@@ -246,11 +256,11 @@ body.touch .prow__head{cursor:pointer}
 #ch3 .about .ln>span{display:block;transform:translateY(105%)}
 
 /* ch4 — the fade — small, contained connective beat (not a second climax) */
-#ch4{padding:16vh 0}
-#ch4 .fadewrap{text-align:center;padding:0 var(--pad);max-width:640px;margin:0 auto}
-#ch4 .fades{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(22px,3vw,38px);line-height:1.2}
+#ch4{padding:18vh 0}
+#ch4 .fadewrap{text-align:center;padding:0 var(--pad);max-width:900px;margin:0 auto}
+#ch4 .fades{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(34px,5.4vw,72px);line-height:1.15}
 #ch4 .fades .ch{display:inline-block;will-change:transform,opacity}
-#ch4 .stays{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(22px,3vw,38px);line-height:1.2;opacity:0;filter:blur(8px);margin-top:.35em}
+#ch4 .stays{font-family:var(--kuevy);text-transform:lowercase;font-size:clamp(34px,5.4vw,72px);line-height:1.15;opacity:0;filter:blur(8px);margin-top:.3em}
 #ch4 .stays .stop{color:var(--red);display:inline-block}
 
 /* ch5 — the invitation */
@@ -285,10 +295,15 @@ body.touch .prow__head{cursor:pointer}
    WebGL background (lazy-initialised only once it's near view), a mega
    wordmark for scale contrast against the small nav columns, and the
    copy-email affordance kept from before */
-footer{position:relative;margin-top:26vh;padding:9vh var(--pad) 40px;overflow:hidden;isolation:isolate}
-#footer-canvas{position:absolute;inset:0;z-index:-1;width:100%;height:100%;display:block;touch-action:pan-y;opacity:0;transition:opacity 1.2s var(--ease-out)}
+footer{position:relative;margin-top:26vh;padding:9vh var(--pad) 40px;isolation:isolate}
+/* the canvas extends 60vh above the footer's own box (not clipped —
+   footer no longer has overflow:hidden) so the gradient bleeds into the
+   tail of chapter 5 instead of starting with a hard edge exactly at the
+   footer boundary; the shader itself also fades its own colour to
+   nothing across that extra height (see uFadeFrac) so the seam is gone
+   from both sides at once */
+#footer-canvas{position:absolute;left:0;right:0;top:-60vh;bottom:0;z-index:-1;width:100%;height:calc(100% + 60vh);display:block;touch-action:pan-y;opacity:0;transition:opacity 1.2s var(--ease-out)}
 #footer-canvas.is-in{opacity:1}
-footer::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse 90% 70% at 50% 0%,transparent 0%,var(--ink) 88%)}
 
 .fhead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;padding-bottom:8vh;border-bottom:1px solid var(--cream-10)}
 .fkicker{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(24px,3.2vw,44px);line-height:1.15;max-width:14ch;color:var(--cream)}
@@ -340,7 +355,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
 <body>
 
 <!-- atmosphere -->
-<div id="bg-wash"></div>
+<div id="bg-wash"><span class="wash wash--1"></span><span class="wash wash--2"></span><span class="wash wash--3"></span><span class="wash wash--4"></span><span class="wash wash--5"></span></div>
 <div id="vignette"></div>
 <div id="grain"></div>
 
@@ -630,6 +645,12 @@ if (!isTouch){
 const heroU = { reveal: 0, scrollP: 0, scrollV: 0, scrollZoom: 0 };
 const heroShape = { shapeReveal: 0, pulseReveal: 0 };
 let heroRenderer = null, heroUniforms = null, heroTouch = null;
+// once you've genuinely scrolled past the hero, its WebGL loop stops
+// rendering entirely rather than just being hidden by CSS — visibility
+// alone doesn't stop the GPU work, and with the footer's own WebGL scene
+// running too, two permanently-rendering contexts is exactly the kind of
+// sustained load that reads as "the page almost crashes" near the bottom
+let heroActive = true;
 
 // generic two-pass 8-neighbour signed-distance-field bake from a filled
 // Path2D — not target-specific, stands in for the KTX2 SDF asset podium
@@ -907,7 +928,7 @@ function initHero(){
   let prevT = clock.getElapsedTime();
   const tick = () => {
     requestAnimationFrame(tick);
-    if (!visible || !heroRenderer) return;
+    if (!visible || !heroActive || !heroRenderer) return;
     const now = clock.getElapsedTime();
     const dt = Math.max(0, now - prevT); prevT = now;
     heroUniforms.uTime.value = now;
@@ -1142,17 +1163,25 @@ function initFooterGradient(){
   const footerEl = $('footer');
   if (!canvas || !footerEl || !GL) return;
 
+  // the canvas is taller than the footer itself (see CSS: top:-60vh) so the
+  // gradient can bleed into the tail of chapter 5 — uFadeFrac tells the
+  // shader where the footer's own top edge sits within that taller frame,
+  // so it can fade its colour out to nothing above it instead of cutting
+  // off hard at the boundary
+  const extendPx = () => innerHeight * 0.6;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, alpha:true, powerPreference:'low-power' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   const size0 = footerEl.getBoundingClientRect();
-  renderer.setSize(size0.width || innerWidth, Math.max(size0.height, innerHeight), false);
+  const h0 = Math.max(size0.height, innerHeight) + extendPx();
+  renderer.setSize(size0.width || innerWidth, h0, false);
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const geo = new THREE.PlaneGeometry(2,2);
   const uniforms = {
     uTime: { value: 0 },
-    uResolution: { value: new THREE.Vector2(size0.width||innerWidth, size0.height||innerHeight) },
+    uResolution: { value: new THREE.Vector2(size0.width||innerWidth, h0) },
+    uFadeFrac: { value: Math.max(size0.height, innerHeight) / h0 },
     uMouse: { value: new THREE.Vector2(0.5, 0.4) },
     uMouseActive: { value: 0 },
     uMouseEnergy: { value: 0 }
@@ -1164,6 +1193,7 @@ function initFooterGradient(){
       precision highp float;
       uniform float uTime;
       uniform vec2 uResolution;
+      uniform float uFadeFrac;
       uniform vec2 uMouse;
       uniform float uMouseActive;
       uniform float uMouseEnergy;
@@ -1181,25 +1211,36 @@ function initFooterGradient(){
         // pulls them toward it — the whole mesh leans into your cursor
         // rather than just adding a spot on top of it
         vec2 m = uMouse * vec2(aspect, 1.0);
-        vec2 pull = (m - vec2(0.5*aspect, 0.45)) * 0.12 * uMouseActive;
+        vec2 pull = (m - vec2(0.5*aspect, 0.45)) * 0.1 * uMouseActive;
 
         vec2 c1 = vec2(0.25 + sin(t*1.3)*0.16, 0.55 + cos(t*1.05)*0.18) * vec2(aspect,1.0) + pull;
         vec2 c2 = vec2(0.75 + cos(t*0.85)*0.18, 0.65 + sin(t*1.35)*0.16) * vec2(aspect,1.0) + pull*0.6;
         vec2 c3 = vec2(0.5 + sin(t*0.65+2.1)*0.22, 0.25 + cos(t*0.55)*0.16) * vec2(aspect,1.0) + pull*0.8;
         vec2 c4 = vec2(0.18 + cos(t*1.1+1.3)*0.12, 0.2 + sin(t*0.75)*0.14) * vec2(aspect,1.0) + pull*0.5;
 
+        // kept deliberately subtle — this used to read as a bold, obvious
+        // effect; intensities are roughly halved and the blobs themselves
+        // are a little smaller so it sits underneath the content instead
+        // of competing with it
         vec3 col = vec3(0.039, 0.035, 0.031);
-        col += blob(uv, c1, 0.62) * vec3(0.898, 0.208, 0.169) * 0.55;
-        col += blob(uv, c2, 0.55) * vec3(0.224, 0.443, 1.0) * 0.5;
-        col += blob(uv, c3, 0.68) * vec3(1.0, 0.69, 0.125) * 0.32;
-        col += blob(uv, c4, 0.5)  * vec3(0.224, 0.443, 1.0) * 0.28;
+        col += blob(uv, c1, 0.52) * vec3(0.898, 0.208, 0.169) * 0.26;
+        col += blob(uv, c2, 0.46) * vec3(0.224, 0.443, 1.0) * 0.24;
+        col += blob(uv, c3, 0.58) * vec3(1.0, 0.69, 0.125) * 0.16;
+        col += blob(uv, c4, 0.42) * vec3(0.224, 0.443, 1.0) * 0.14;
 
         // a fifth blob that IS the cursor — brightens and swells with how
         // fast you're moving, fades out entirely once the pointer leaves
-        float mr = 0.34 + uMouseEnergy * 0.22;
+        float mr = 0.28 + uMouseEnergy * 0.16;
         float mGlow = blob(uv, m, mr) * uMouseActive;
         vec3 mColor = mix(vec3(1.0, 0.69, 0.125), vec3(1.0, 0.87, 0.6), uMouseEnergy);
-        col += mGlow * mColor * (0.4 + uMouseEnergy * 0.5);
+        col += mGlow * mColor * (0.2 + uMouseEnergy * 0.28);
+
+        // fade the whole coloured contribution to nothing across the
+        // extended top of the canvas, so it blends into the plain body
+        // background above rather than cutting off at the footer edge
+        float edgeFade = 1.0 - smoothstep(uFadeFrac, 1.0, vUv.y);
+        vec3 addedColor = col - vec3(0.039, 0.035, 0.031);
+        col = vec3(0.039, 0.035, 0.031) + addedColor * edgeFade;
 
         gl_FragColor = vec4(col, 1.0);
       }`
@@ -1246,9 +1287,10 @@ function initFooterGradient(){
 
   addEventListener('resize', () => {
     const r = footerEl.getBoundingClientRect();
-    const w = r.width || innerWidth, h = Math.max(r.height, innerHeight);
+    const w = r.width || innerWidth, h = Math.max(r.height, innerHeight) + extendPx();
     renderer.setSize(w, h, false);
     uniforms.uResolution.value.set(w, h);
+    uniforms.uFadeFrac.value = Math.max(r.height, innerHeight) / h;
   });
 
   requestAnimationFrame(() => canvas.classList.add('is-in'));
@@ -1356,11 +1398,15 @@ function buildFilm(){
     } });
 
   /* 00 · the mark, as a window — grows until it swallows the white page,
-     then dissolves well before chapter 1 arrives. It does not linger. */
+     then dissolves well before chapter 1 arrives. It does not linger.
+     Shorter pin than before (was +=130%, ~2.3 viewport-heights of scroll
+     before any chapter-1 content showed up) — the fade/zoom fractions
+     below are unchanged, so the whole handoff just plays out over less
+     physical scroll distance instead of dragging. */
   const ch0El = $('#ch0');
   const heroCanvasEl = $('#hero-canvas');
   ScrollTrigger.create({
-    trigger:'#ch0', start:'top top', end:'+=130%', pin:true, scrub:true,
+    trigger:'#ch0', start:'top top', end:'+=70%', pin:true, scrub:true,
     onUpdate: st => {
       const p = st.progress;
       heroU.scrollV = p - heroU.scrollP;
@@ -1393,10 +1439,11 @@ function buildFilm(){
   });
   // hard safety net: once you've genuinely left the hero, the canvas is
   // switched off entirely rather than trusting opacity/reveal math alone
+  // — and the render loop itself stops, not just the CSS visibility
   if (heroCanvasEl) ScrollTrigger.create({
     trigger:'#ch0', start:'top top', end:'bottom top',
-    onLeave: () => heroCanvasEl.style.visibility = 'hidden',
-    onEnterBack: () => heroCanvasEl.style.visibility = 'visible'
+    onLeave: () => { heroCanvasEl.style.visibility = 'hidden'; heroActive = false; },
+    onEnterBack: () => { heroCanvasEl.style.visibility = 'visible'; heroActive = true; }
   });
 
   /* 01 · the thesis — pure kinetic type, no particle system underneath it.
