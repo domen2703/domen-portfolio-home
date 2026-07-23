@@ -83,6 +83,17 @@ a,button,[data-hover]{cursor:none}
 body.touch a,body.touch button{cursor:pointer}
 
 /* ————— atmosphere ————— */
+/* the body is near-black by default, but nothing past the hero should
+   read as flat/off — each chapter tints the same fixed wash a different
+   colour, so the film stays "warm dark" the whole way down instead of
+   just going black once the hero's paper background ends */
+#bg-wash{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.4s ease,background 1.4s ease}
+html.static #bg-wash{display:none}
+body.chapter-1 #bg-wash{opacity:1;background:radial-gradient(ellipse 90% 70% at 50% 20%,rgba(57,113,255,.16) 0%,transparent 65%)}
+body.chapter-2 #bg-wash{opacity:1;background:radial-gradient(ellipse 100% 60% at 20% 0%,rgba(229,53,43,.14) 0%,transparent 60%),radial-gradient(ellipse 80% 60% at 90% 40%,rgba(57,113,255,.1) 0%,transparent 65%)}
+body.chapter-3 #bg-wash{opacity:1;background:radial-gradient(ellipse 90% 70% at 80% 30%,rgba(255,176,32,.14) 0%,transparent 65%)}
+body.chapter-4 #bg-wash{opacity:1;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(57,113,255,.12) 0%,transparent 65%)}
+body.chapter-5 #bg-wash{opacity:1;background:radial-gradient(ellipse 110% 80% at 50% 80%,rgba(229,53,43,.18) 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 15% 20%,rgba(255,176,32,.1) 0%,transparent 65%)}
 #grain{position:fixed;inset:-100px;z-index:60;pointer-events:none;opacity:.07;mix-blend-mode:overlay}
 #vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
   background:radial-gradient(ellipse 120% 90% at 50% 45%,transparent 55%,rgba(5,4,3,.55) 100%)}
@@ -171,65 +182,53 @@ section{position:relative}
 .chead h2 .word{display:inline-block;overflow:hidden;vertical-align:bottom}
 .chead h2 .word>span{display:inline-block;transform:translateY(110%)}
 
-/* ch2 — the archive — a grid of large project cards, leeroy-style:
-   clip-path scroll-reveal on the cover, a colour tag chip, mega title with
-   a small meta line for contrast, click opens a modal (no more accordion
-   height animation — that was the "buggy" part) */
+/* ch2 — the archive — a row list (lamalama.com's cases-list pattern: no
+   shader there either, it's a plain accordion row list — title + tags +
+   a cropped thumbnail strip, a hover-only "view case" reveal, click to
+   expand in place). Expand/collapse uses the CSS grid 0fr->1fr trick,
+   not a JS-measured height tween — that was the actual source of the
+   "buggy" feeling before, not the visual design. */
 #ch2{padding:22vh 0 20vh}
-#ch2 .intro{padding:0 var(--pad);max-width:640px;margin-bottom:11vh;font-size:clamp(17px,1.6vw,23px);line-height:1.6;color:var(--cream-70);font-weight:400}
+#ch2 .intro{padding:0 var(--pad);max-width:640px;margin-bottom:9vh;font-size:clamp(17px,1.6vw,23px);line-height:1.6;color:var(--cream-70);font-weight:400}
 #ch2 .intro b{color:var(--cream);font-weight:500}
-.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,2.6vw,40px);padding:0 var(--pad)}
-.pcard{list-style:none}
-.pcard--wide{grid-column:1/-1}
-.pcard__btn{all:unset;display:block;width:100%;box-sizing:border-box;cursor:none}
-body.touch .pcard__btn{cursor:pointer}
-.pcard__frame{display:block;position:relative;overflow:hidden;background:var(--ink-2);aspect-ratio:.8}
-.pcard--wide .pcard__frame{aspect-ratio:2.1/1}
-.pcard__clip{position:absolute;inset:0;clip-path:inset(100% 0 0 0);will-change:clip-path}
-.pcard__img{display:block;width:100%;height:100%;object-fit:cover;transform:scale(1.06);transition:transform .9s var(--ease-out)}
-.pcard__btn:hover .pcard__img{transform:scale(1.13)}
-.pcard__tag{position:absolute;top:18px;left:18px;z-index:2;background:var(--accent);color:#fff;font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:7px 14px;border-radius:99px;transition:transform .5s var(--ease-out);transform:translateY(0)}
-.pcard__btn:hover .pcard__tag{transform:translateY(-3px)}
-.pcard__meta{display:block;padding-top:22px}
-.pcard__num{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.3em;color:var(--cream-40)}
-.pcard__title{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(30px,3.6vw,54px);line-height:1;margin-top:10px;transition:color .4s;overflow:hidden}
-.pcard--wide .pcard__title{font-size:clamp(38px,5vw,78px)}
-.pcard__title .line{display:block;transform:translateY(105%)}
-.pcard__btn:hover .pcard__title{color:var(--accent)}
-.pcard__sub{display:block;margin-top:12px;font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:lowercase;color:var(--cream-55)}
-
-/* project modal — replaces the old accordion drawer entirely */
-.pmodal{position:fixed;inset:0;z-index:210;display:flex;align-items:center;justify-content:center;padding:6vh var(--pad);opacity:0;pointer-events:none;transition:opacity .35s var(--ease-out)}
-.pmodal.is-open{opacity:1;pointer-events:auto}
-.pmodal__scrim{position:absolute;inset:0;background:rgba(6,5,4,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.pmodal__panel{position:relative;width:min(960px,100%);max-height:86vh;overflow-y:auto;overscroll-behavior:contain;background:var(--ink-2);border:1px solid var(--cream-10);border-radius:8px;padding:clamp(30px,5vw,68px);transform:scale(.96);opacity:0;transition:transform .4s var(--ease-out),opacity .35s var(--ease-out)}
-.pmodal.is-open .pmodal__panel{transform:scale(1);opacity:1}
-.pmodal__close{all:unset;position:absolute;top:24px;right:24px;width:40px;height:40px;border-radius:50%;border:1px solid var(--cream-24);display:flex;align-items:center;justify-content:center;cursor:none;transition:border-color .4s,transform var(--btn-press-dur) var(--btn-press-ease)}
-body.touch .pmodal__close{cursor:pointer}
-.pmodal__close:hover{border-color:var(--cream)}
-.pmodal__close:active{transform:scale(.92);transition-duration:var(--btn-press-dur)}
-.pmodal__close svg{width:13px;height:13px}
-.pmodal__close path{stroke:var(--cream);stroke-width:1.4}
-.pmodal__num{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.3em;color:var(--cream-40)}
-.pmodal__title{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(38px,5.4vw,72px);line-height:1;margin-top:10px}
-.pmodal__meta{display:block;margin-top:12px;font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:lowercase;color:var(--cream-55)}
-.pmodal__copy{font-size:clamp(16px,1.5vw,20px);line-height:1.75;color:var(--cream-70);max-width:62ch;margin-top:28px}
-.pmodal__copy b{color:var(--cream);font-weight:500}
-.pmodal__tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-.pmodal__tags span{font-family:var(--sans);font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:lowercase;color:var(--cream-55);border:1px solid var(--cream-24);padding:8px 14px;border-radius:99px}
-.pmodal__link{display:inline-flex;align-items:center;gap:12px;margin-top:26px;font-family:var(--sans);font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:lowercase;color:var(--accent);border-bottom:1px solid currentColor;padding-bottom:6px}
-.pmodal__link[hidden]{display:none}
-.pmodal__link::after{content:"↗";font-size:12px}
-.pmodal__gallery{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.4vw,20px);margin-top:36px}
+.plist{border-top:1px solid var(--cream-10)}
+.prow{border-bottom:1px solid var(--cream-10)}
+.prow__head{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:clamp(16px,2.4vw,32px);width:100%;padding:clamp(20px,3.2vh,34px) var(--pad);cursor:none;transition:background-color .5s}
+body.touch .prow__head{cursor:pointer}
+.prow__head:hover{background:var(--cream-06)}
+.prow__num{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.3em;color:var(--cream-40);flex:none;width:28px}
+.prow__name{font-family:var(--kuevy);text-transform:lowercase;font-weight:400;font-size:clamp(26px,3.6vw,52px);line-height:1;flex:none;width:clamp(160px,22vw,340px);transition:color .4s}
+.prow__head:hover .prow__name{color:var(--accent)}
+.prow__tags{display:flex;flex-wrap:wrap;gap:8px;flex:1 1 auto;-lg:hidden}
+.prow__tags span{font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-70);border:1px solid var(--cream-24);padding:6px 12px;border-radius:99px;white-space:nowrap}
+.prow__strip{flex:none;display:flex;gap:6px;width:clamp(160px,18vw,260px);height:64px;overflow:hidden;border-radius:3px}
+.prow__strip img{flex:1 1 0;min-width:0;width:100%;height:100%;object-fit:cover;transform:scale(1.08);transition:transform .8s var(--ease-out)}
+.prow__head:hover .prow__strip img{transform:scale(1.16)}
+.prow__cta{flex:none;display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:lowercase;color:var(--accent);opacity:0;transform:translateX(-6px);transition:opacity .35s,transform .35s}
+@media (hover:hover) and (pointer:fine){ .prow__head:hover .prow__cta{opacity:1;transform:translateX(0)} }
+.prow__toggle{flex:none;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--cream-40);width:34px;text-align:right;transition:color .4s}
+.prow__head:hover .prow__toggle{color:var(--cream)}
+.prow__body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .65s var(--ease-io)}
+.prow.is-open .prow__body{grid-template-rows:1fr}
+.prow__body-in{overflow:hidden;min-height:0}
+.prow__body-content{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.45fr);gap:clamp(28px,4.5vw,80px);padding:8px var(--pad) clamp(48px,7vh,88px) calc(var(--pad) + 62px)}
+.prow__copy{font-size:clamp(15px,1.3vw,18px);line-height:1.75;color:var(--cream-70);max-width:44ch}
+.prow__copy b{color:var(--cream);font-weight:500}
+.prow__link{display:inline-flex;align-items:center;gap:12px;margin-top:22px;font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:lowercase;color:var(--accent);border-bottom:1px solid currentColor;padding-bottom:6px}
+.prow__link::after{content:"↗";font-size:12px}
+.prow__gallery{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.4vw,20px);align-items:start}
 .pgal{position:relative;margin:0}
 .pgal.wide{grid-column:1/-1}
 .pgal .frame{display:block;overflow:hidden;background:var(--ink)}
 .pgal img,.pgal video{display:block;width:100%;height:auto}
 .pgal figcaption{margin-top:10px;font-family:var(--sans);font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:lowercase;color:var(--cream-55)}
-@media (max-width:760px){
-  .pgrid{grid-template-columns:1fr}
-  .pcard--wide .pcard__frame{aspect-ratio:.8}
-  .pmodal__gallery{grid-template-columns:1fr}
+@media (max-width:860px){
+  .prow__head{flex-wrap:wrap}
+  .prow__tags{display:none}
+  .prow__cta{display:none}
+  .prow__strip{width:120px;height:48px}
+  .prow__body-content{grid-template-columns:1fr;padding-left:var(--pad)}
+  .prow__gallery{grid-template-columns:1fr}
 }
 
 /* ch3 — behind the work */
@@ -341,6 +340,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
 <body>
 
 <!-- atmosphere -->
+<div id="bg-wash"></div>
 <div id="vignette"></div>
 <div id="grain"></div>
 
@@ -417,77 +417,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
     </div>
     <p class="intro" data-io>a glance is free. <b>a second look has to be earned.</b> here's what earned it.</p>
 
-    <div class="pgrid" id="pgrid">
-      <div class="pcard pcard--wide" data-proj="0">
-        <button class="pcard__btn" data-open="0" data-hover aria-haspopup="dialog">
-          <span class="pcard__frame">
-            <span class="pcard__clip"><img class="pcard__img" src="assets/img/gorjup-01.jpg" alt="Gorjup wine bottles with green labels standing on weathered wood" loading="lazy"></span>
-            <span class="pcard__tag">wine · identity</span>
-          </span>
-          <span class="pcard__meta">
-            <span class="pcard__num">01</span>
-            <h3 class="pcard__title"><span class="line">gorjup</span></h3>
-            <span class="pcard__sub">identity &amp; packaging · 2025</span>
-          </span>
-        </button>
-      </div>
-
-      <div class="pcard" data-proj="1">
-        <button class="pcard__btn" data-open="1" data-hover aria-haspopup="dialog">
-          <span class="pcard__frame">
-            <span class="pcard__clip"><img class="pcard__img" src="assets/img/kosovel-01.jpg" alt="Open red spread of the Kosovel booklet with archive material" loading="lazy"></span>
-            <span class="pcard__tag">editorial</span>
-          </span>
-          <span class="pcard__meta">
-            <span class="pcard__num">02</span>
-            <h3 class="pcard__title"><span class="line">kosovel</span></h3>
-            <span class="pcard__sub">editorial design · 2025</span>
-          </span>
-        </button>
-      </div>
-
-      <div class="pcard" data-proj="2">
-        <button class="pcard__btn" data-open="2" data-hover aria-haspopup="dialog">
-          <span class="pcard__frame">
-            <span class="pcard__clip"><img class="pcard__img" src="assets/img/santera-01.jpg" alt="Frosted Santera bottle beside a filled glass, olive branches behind" loading="lazy"></span>
-            <span class="pcard__tag">aperitif · identity</span>
-          </span>
-          <span class="pcard__meta">
-            <span class="pcard__num">03</span>
-            <h3 class="pcard__title"><span class="line">santera</span></h3>
-            <span class="pcard__sub">identity &amp; packaging · 2026</span>
-          </span>
-        </button>
-      </div>
-
-      <div class="pcard" data-proj="3">
-        <button class="pcard__btn" data-open="3" data-hover aria-haspopup="dialog">
-          <span class="pcard__frame">
-            <span class="pcard__clip"><img class="pcard__img" src="assets/img/ronki-01.jpg" alt="Two dark Ronki olive oil bottles with acid green labels" loading="lazy"></span>
-            <span class="pcard__tag">olive oil · identity</span>
-          </span>
-          <span class="pcard__meta">
-            <span class="pcard__num">04</span>
-            <h3 class="pcard__title"><span class="line">ronki</span></h3>
-            <span class="pcard__sub">identity &amp; packaging · 2026</span>
-          </span>
-        </button>
-      </div>
-
-      <div class="pcard pcard--wide" data-proj="4">
-        <button class="pcard__btn" data-open="4" data-hover aria-haspopup="dialog">
-          <span class="pcard__frame">
-            <span class="pcard__clip"><img class="pcard__img" src="assets/img/zhp-01.jpg" alt="2fit2fail website — homepage hero" loading="lazy"></span>
-            <span class="pcard__tag">web · motion</span>
-          </span>
-          <span class="pcard__meta">
-            <span class="pcard__num">05</span>
-            <h3 class="pcard__title"><span class="line">2fit2fail</span></h3>
-            <span class="pcard__sub">identity &amp; website · 2026</span>
-          </span>
-        </button>
-      </div>
-    </div>
+    <div class="plist" id="plist"></div>
   </section>
 
   <!-- 03 · behind the work -->
@@ -567,22 +497,6 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:1px solid 
 
 </main>
 
-<!-- project modal -->
-<div class="pmodal" id="pmodal" aria-hidden="true">
-  <div class="pmodal__scrim" data-close></div>
-  <div class="pmodal__panel" role="dialog" aria-modal="true" aria-labelledby="pmodal-title">
-    <button class="pmodal__close" data-close data-hover aria-label="close">
-      <svg viewBox="0 0 13 13"><path d="M1 1L12 12M12 1L1 12" fill="none" stroke-linecap="round"/></svg>
-    </button>
-    <span class="pmodal__num" id="pmodal-num"></span>
-    <h3 class="pmodal__title" id="pmodal-title"></h3>
-    <span class="pmodal__meta" id="pmodal-meta"></span>
-    <p class="pmodal__copy" id="pmodal-copy"></p>
-    <div class="pmodal__tags" id="pmodal-tags"></div>
-    <a class="pmodal__link" id="pmodal-link" data-hover target="_blank" rel="noopener" hidden>visit the live site</a>
-    <div class="pmodal__gallery" id="pmodal-gallery"></div>
-  </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1073,70 +987,69 @@ const PROJECTS = [
     ] }
 ];
 
-/* cards reveal as they scroll in: cover wipes open (clip-path), title
-   resolves line by line — no particle system underneath any of it */
-$$('.pcard').forEach((card, i) => {
-  const clip = card.querySelector('.pcard__clip');
-  const lines = card.querySelectorAll('.pcard__title .line');
-  gsap.timeline({ scrollTrigger:{ trigger:card, start:'top 88%' } })
-    .fromTo(clip, { clipPath:'inset(100% 0 0 0)' }, { clipPath:'inset(0% 0 0 0)', duration:1.1, ease:'expo.out' }, 0)
-    .to(lines, { y:'0%', duration:.9, stagger:.06, ease:'expo.out' }, .15)
-    .fromTo(card.querySelector('.pcard__tag'), { opacity:0, y:-8 }, { opacity:1, y:0, duration:.6, ease:'power2.out' }, .5)
-    .fromTo(card.querySelector('.pcard__sub'), { opacity:0 }, { opacity:1, duration:.6, ease:'power2.out' }, .6);
-});
+/* rows are built from PROJECTS — title, tags, a cropped thumbnail strip,
+   a hover-only "view case" reveal, and a click-to-expand body using the
+   CSS grid 0fr->1fr trick instead of a JS-measured height tween. That
+   JS-measured height (the old `height: open ? 0 : 'auto'` GSAP tween)
+   was the actual source of the "buggy" feeling, not the row design. */
+function galleryHTML(p){
+  return p.gallery.map(g => {
+    const media = g.video
+      ? `<video src="${g.src}" muted loop playsinline autoplay preload="metadata"></video>`
+      : `<img src="${g.src}" alt="${g.alt || ''}" loading="lazy">`;
+    return `<figure class="pgal${g.wide ? ' wide' : ''}"><span class="frame">${media}</span><figcaption>${g.cap}</figcaption></figure>`;
+  }).join('');
+}
+function stripHTML(p){
+  return p.gallery.filter(g => !g.video).slice(0, 3)
+    .map(g => `<img src="${g.src}" alt="" loading="lazy">`).join('');
+}
 
-/* the modal — one reusable dialog, populated from PROJECTS on open */
-{
-  const modal = $('#pmodal');
-  const panel = modal.querySelector('.pmodal__panel');
-  const els = {
-    num: $('#pmodal-num'), title: $('#pmodal-title'), meta: $('#pmodal-meta'),
-    copy: $('#pmodal-copy'), tags: $('#pmodal-tags'), link: $('#pmodal-link'), gallery: $('#pmodal-gallery')
-  };
-  let lastTrigger = null;
+const plist = $('#plist');
+if (plist){
+  plist.innerHTML = PROJECTS.map((p, i) => `
+    <div class="prow" data-proj="${i}">
+      <button class="prow__head" data-toggle data-hover aria-expanded="false" aria-controls="prow-body-${i}">
+        <span class="prow__num">${p.num}</span>
+        <h3 class="prow__name">${p.title}</h3>
+        <span class="prow__tags">${p.tags.map(t => `<span>${t}</span>`).join('')}</span>
+        <span class="prow__strip" aria-hidden="true">${stripHTML(p)}</span>
+        <span class="prow__cta">view case</span>
+        <span class="prow__toggle" aria-hidden="true">(<i>+</i>)</span>
+      </button>
+      <div class="prow__body" id="prow-body-${i}">
+        <div class="prow__body-in"><div class="prow__body-content">
+          <div>
+            <p class="prow__copy">${p.copy}</p>
+            ${p.link ? `<a class="prow__link" href="${p.link}" target="_blank" rel="noopener" data-hover>visit the live site</a>` : ''}
+          </div>
+          <div class="prow__gallery">${galleryHTML(p)}</div>
+        </div></div>
+      </div>
+    </div>`).join('');
 
-  function galleryHTML(p){
-    return p.gallery.map(g => {
-      const media = g.video
-        ? `<video src="${g.src}" muted loop playsinline autoplay preload="metadata"></video>`
-        : `<img src="${g.src}" alt="${g.alt || ''}" loading="lazy">`;
-      return `<figure class="pgal${g.wide ? ' wide' : ''}"><span class="frame">${media}</span><figcaption>${g.cap}</figcaption></figure>`;
-    }).join('');
-  }
-
-  function openProject(i, trigger){
-    const p = PROJECTS[i];
-    if (!p) return;
-    lastTrigger = trigger || null;
-    els.num.textContent = p.num;
-    els.title.textContent = p.title;
-    els.meta.innerHTML = p.meta;
-    els.copy.innerHTML = p.copy;
-    els.tags.innerHTML = p.tags.map(t => `<span>${t}</span>`).join('');
-    if (p.link){ els.link.href = p.link; els.link.hidden = false; } else { els.link.hidden = true; }
-    els.gallery.innerHTML = galleryHTML(p);
-    modal.classList.add('is-open');
-    modal.setAttribute('aria-hidden', 'false');
-    panel.scrollTop = 0;
-    if (lenis) lenis.stop();
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeProject(){
-    if (!modal.classList.contains('is-open')) return;
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-    if (lenis) lenis.start();
-    modal.querySelectorAll('video').forEach(v => v.pause());
-    if (lastTrigger) lastTrigger.focus({ preventScroll:true });
-  }
-
-  $$('[data-open]').forEach(btn => {
-    btn.addEventListener('click', () => openProject(+btn.dataset.open, btn));
+  /* rows rise in as they scroll into view — plain opacity/transform,
+     no particle system, no per-character blur */
+  $$('.prow').forEach((row, i) => {
+    gsap.fromTo(row, { opacity:0, y:36 }, { opacity:1, y:0, duration:1, delay:i*.04, ease:'expo.out',
+      scrollTrigger:{ trigger:row, start:'top 92%' } });
   });
-  modal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeProject));
-  addEventListener('keydown', e => { if (e.key === 'Escape') closeProject(); });
+
+  $$('.prow__head').forEach(head => {
+    const row = head.closest('.prow');
+    const toggleIcon = head.querySelector('.prow__toggle i');
+    head.addEventListener('click', () => {
+      const open = row.classList.contains('is-open');
+      row.classList.toggle('is-open', !open);
+      head.setAttribute('aria-expanded', String(!open));
+      toggleIcon.textContent = open ? '+' : '−';
+      row.querySelectorAll('video').forEach(v => { if (!open && v.play) v.play().catch(()=>{}); else v.pause(); });
+      // the grid-rows transition (~650ms) changes document height once it
+      // settles — one scheduled refresh keeps every pinned section's
+      // scroll math honest, same pattern already used for image loads
+      if (hasLibs) setTimeout(() => ScrollTrigger.refresh(), 700);
+    });
+  });
 }
 
 /* magnetic pull on the primary actions (desktop only — needs a real cursor) */
@@ -1239,7 +1152,10 @@ function initFooterGradient(){
   const geo = new THREE.PlaneGeometry(2,2);
   const uniforms = {
     uTime: { value: 0 },
-    uResolution: { value: new THREE.Vector2(size0.width||innerWidth, size0.height||innerHeight) }
+    uResolution: { value: new THREE.Vector2(size0.width||innerWidth, size0.height||innerHeight) },
+    uMouse: { value: new THREE.Vector2(0.5, 0.4) },
+    uMouseActive: { value: 0 },
+    uMouseEnergy: { value: 0 }
   };
   const mat = new THREE.ShaderMaterial({
     uniforms,
@@ -1248,6 +1164,9 @@ function initFooterGradient(){
       precision highp float;
       uniform float uTime;
       uniform vec2 uResolution;
+      uniform vec2 uMouse;
+      uniform float uMouseActive;
+      uniform float uMouseEnergy;
       varying vec2 vUv;
       // generic soft-blob gradient mesh — not target-specific
       float blob(vec2 uv, vec2 center, float radius){
@@ -1258,10 +1177,16 @@ function initFooterGradient(){
         vec2 uv = vUv * vec2(aspect, 1.0);
         float t = uTime * 0.05;
 
-        vec2 c1 = vec2(0.25 + sin(t*1.3)*0.16, 0.55 + cos(t*1.05)*0.18) * vec2(aspect,1.0);
-        vec2 c2 = vec2(0.75 + cos(t*0.85)*0.18, 0.65 + sin(t*1.35)*0.16) * vec2(aspect,1.0);
-        vec2 c3 = vec2(0.5 + sin(t*0.65+2.1)*0.22, 0.25 + cos(t*0.55)*0.16) * vec2(aspect,1.0);
-        vec2 c4 = vec2(0.18 + cos(t*1.1+1.3)*0.12, 0.2 + sin(t*0.75)*0.14) * vec2(aspect,1.0);
+        // the ambient blobs drift on their own, but the pointer gently
+        // pulls them toward it — the whole mesh leans into your cursor
+        // rather than just adding a spot on top of it
+        vec2 m = uMouse * vec2(aspect, 1.0);
+        vec2 pull = (m - vec2(0.5*aspect, 0.45)) * 0.12 * uMouseActive;
+
+        vec2 c1 = vec2(0.25 + sin(t*1.3)*0.16, 0.55 + cos(t*1.05)*0.18) * vec2(aspect,1.0) + pull;
+        vec2 c2 = vec2(0.75 + cos(t*0.85)*0.18, 0.65 + sin(t*1.35)*0.16) * vec2(aspect,1.0) + pull*0.6;
+        vec2 c3 = vec2(0.5 + sin(t*0.65+2.1)*0.22, 0.25 + cos(t*0.55)*0.16) * vec2(aspect,1.0) + pull*0.8;
+        vec2 c4 = vec2(0.18 + cos(t*1.1+1.3)*0.12, 0.2 + sin(t*0.75)*0.14) * vec2(aspect,1.0) + pull*0.5;
 
         vec3 col = vec3(0.039, 0.035, 0.031);
         col += blob(uv, c1, 0.62) * vec3(0.898, 0.208, 0.169) * 0.55;
@@ -1269,10 +1194,37 @@ function initFooterGradient(){
         col += blob(uv, c3, 0.68) * vec3(1.0, 0.69, 0.125) * 0.32;
         col += blob(uv, c4, 0.5)  * vec3(0.224, 0.443, 1.0) * 0.28;
 
+        // a fifth blob that IS the cursor — brightens and swells with how
+        // fast you're moving, fades out entirely once the pointer leaves
+        float mr = 0.34 + uMouseEnergy * 0.22;
+        float mGlow = blob(uv, m, mr) * uMouseActive;
+        vec3 mColor = mix(vec3(1.0, 0.69, 0.125), vec3(1.0, 0.87, 0.6), uMouseEnergy);
+        col += mGlow * mColor * (0.4 + uMouseEnergy * 0.5);
+
         gl_FragColor = vec4(col, 1.0);
       }`
   });
   scene.add(new THREE.Mesh(geo, mat));
+
+  // pointer tracking, footer-local: lerped position + a decaying "energy"
+  // term driven by how fast the pointer is actually moving right now
+  let targetMouse = { x: 0.5, y: 0.4 }, curMouse = { x: 0.5, y: 0.4 };
+  let targetActive = 0, curActive = 0;
+  let lastPX = null, lastPY = null, energy = 0;
+  const onPointerMove = e => {
+    const r = footerEl.getBoundingClientRect();
+    if (e.clientY < r.top - 40 || e.clientY > r.bottom + 40){ targetActive = 0; return; }
+    targetMouse.x = (e.clientX - r.left) / Math.max(r.width, 1);
+    targetMouse.y = 1 - (e.clientY - r.top) / Math.max(r.height, 1);
+    targetActive = 1;
+    if (lastPX !== null){
+      const d = Math.hypot(e.clientX - lastPX, e.clientY - lastPY);
+      energy = Math.min(1, energy + d * 0.012);
+    }
+    lastPX = e.clientX; lastPY = e.clientY;
+  };
+  addEventListener('pointermove', onPointerMove, { passive:true });
+  addEventListener('pointerleave', () => targetActive = 0);
 
   let visible = true;
   document.addEventListener('visibilitychange', () => visible = !document.hidden);
@@ -1281,6 +1233,13 @@ function initFooterGradient(){
     requestAnimationFrame(tick);
     if (!visible) return;
     uniforms.uTime.value = clock.getElapsedTime();
+    curMouse.x = lerp(curMouse.x, targetMouse.x, .07);
+    curMouse.y = lerp(curMouse.y, targetMouse.y, .07);
+    curActive = lerp(curActive, targetActive, .05);
+    energy = lerp(energy, 0, .04); // decays back to 0 when the pointer sits still
+    uniforms.uMouse.value.set(curMouse.x, curMouse.y);
+    uniforms.uMouseActive.value = curActive;
+    uniforms.uMouseEnergy.value = energy;
     renderer.render(scene, camera);
   };
   tick();
@@ -1336,6 +1295,11 @@ $('.mark').addEventListener('click', e => {
 function setChapter(n){
   $('#chapter-num').textContent = '0' + n;
   $$('#chapter-name span').forEach(s => s.classList.toggle('on', +s.dataset.ch === n));
+  // the background isn't flat black the whole way down — each chapter
+  // carries its own faint colour wash (see #bg-wash), so the film still
+  // reads as "warm dark" rather than "off"
+  document.body.className = document.body.className.replace(/\bchapter-\d\b/g, '').trim();
+  document.body.classList.add('chapter-' + n);
 }
 
 /* the floating cta picks up attention once the hero hint has faded,
